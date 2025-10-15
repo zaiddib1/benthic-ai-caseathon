@@ -7,275 +7,450 @@
             AI Species Identification
           </h1>
           <p class="text-body1 text-grey-7">
-            Upload underwater imagery or select from our samples to see our computer vision model in action
+            Upload underwater imagery to test our computer vision models
           </p>
         </div>
   
-        <div class="row q-col-gutter-lg">
-          <!-- Left Panel - Upload & Controls -->
-          <div class="col-12 col-md-5">
-            <q-card flat bordered class="upload-card">
-              <q-card-section>
-                <div class="text-h6 q-mb-md">
-                  <q-icon name="cloud_upload" class="q-mr-sm" />
-                  Upload Image
-                </div>
+        <!-- Task Tabs -->
+        <q-tabs
+          v-model="activeTask"
+          class="text-primary q-mb-lg"
+          active-color="primary"
+          indicator-color="primary"
+          align="center"
+        >
+          <q-tab name="classification" label="Task 1: Image Classification" />
+          <q-tab name="detection" label="Task 2: Object Detection" />
+        </q-tabs>
   
-                <!-- File Upload -->
-                <q-file
-                  v-model="uploadedFile"
-                  filled
-                  accept="image/*"
-                  label="Choose underwater image"
-                  @update:model-value="handleFileUpload"
-                  class="q-mb-md"
-                >
-                  <template v-slot:prepend>
-                    <q-icon name="image" />
-                  </template>
-                  <template v-slot:append>
-                    <q-icon
-                      v-if="uploadedFile"
-                      name="close"
-                      @click.stop.prevent="clearUpload"
-                      class="cursor-pointer"
-                    />
-                  </template>
-                </q-file>
+        <q-tab-panels v-model="activeTask" animated>
+          <!-- TASK 1: IMAGE CLASSIFICATION -->
+          <q-tab-panel name="classification">
+            <div class="row q-col-gutter-lg">
+              <!-- Left Panel - Upload & Controls -->
+              <div class="col-12 col-md-5">
+                <q-card flat bordered class="upload-card">
+                  <q-card-section>
+                    <div class="text-h6 q-mb-md">
+                      <q-icon name="category" class="q-mr-sm" />
+                      Upload Image for Classification
+                    </div>
+                    <div class="text-caption text-grey-7 q-mb-md">
+                      Classify a single benthic organism into one of 7 species categories
+                    </div>
   
-                <!-- Sample Images -->
-                <div class="text-subtitle2 q-mb-sm">Or try our sample images:</div>
-                <div class="row q-col-gutter-sm q-mb-lg">
-                  <div
-                    v-for="(sample, index) in sampleImages"
-                    :key="index"
-                    class="col-6"
-                  >
-                    <q-img
-                      :src="sample.thumbnail"
-                      ratio="1"
-                      class="sample-thumbnail cursor-pointer rounded-borders"
-                      :class="{ 'sample-selected': selectedSample === index }"
-                      @click="selectSample(index)"
+                    <!-- File Upload -->
+                    <q-file
+                      v-model="classificationFile"
+                      filled
+                      accept="image/*"
+                      label="Choose underwater image"
+                      @update:model-value="handleClassificationUpload"
+                      class="q-mb-md"
                     >
-                      <div class="absolute-bottom text-caption text-center">
-                        {{ sample.name }}
-                      </div>
-                    </q-img>
-                  </div>
-                </div>
+                      <template v-slot:prepend>
+                        <q-icon name="image" />
+                      </template>
+                      <template v-slot:append>
+                        <q-icon
+                          v-if="classificationFile"
+                          name="close"
+                          @click.stop.prevent="clearClassification"
+                          class="cursor-pointer"
+                        />
+                      </template>
+                    </q-file>
   
-                <!-- Analyze Button -->
-                <q-btn
-                  unelevated
-                  color="primary"
-                  size="lg"
-                  class="full-width"
-                  label="Analyze Image"
-                  icon="psychology"
-                  :loading="isAnalyzing"
-                  :disable="!currentImage"
-                  @click="analyzeImage"
-                />
-              </q-card-section>
-            </q-card>
-  
-            <!-- Model Performance Card -->
-            <q-card flat bordered class="q-mt-md">
-              <q-card-section>
-                <div class="text-h6 q-mb-md">
-                  <q-icon name="insights" class="q-mr-sm" />
-                  Model Performance
-                </div>
-                <q-list dense>
-                  <q-item>
-                    <q-item-section>
-                      <q-item-label caption>Overall Accuracy</q-item-label>
-                      <q-linear-progress
-                        size="20px"
-                        :value="0.95"
-                        color="green"
-                        class="q-mt-sm"
+                    <!-- Sample Images -->
+                    <div class="text-subtitle2 q-mb-sm">Or try our samples:</div>
+                    <div class="row q-col-gutter-sm q-mb-lg">
+                      <div
+                        v-for="(sample, index) in classificationSamples"
+                        :key="index"
+                        class="col-4"
                       >
-                        <div class="absolute-full flex flex-center">
-                          <q-badge color="white" text-color="green" label="95.2%" />
-                        </div>
-                      </q-linear-progress>
-                    </q-item-section>
-                  </q-item>
-                  <q-item>
-                    <q-item-section>
-                      <q-item-label caption>Species Database</q-item-label>
-                      <q-item-label class="text-h6 text-primary">52 Species</q-item-label>
-                    </q-item-section>
-                  </q-item>
-                  <q-item>
-                    <q-item-section>
-                      <q-item-label caption>Training Dataset</q-item-label>
-                      <q-item-label class="text-h6 text-teal">12,847 Images</q-item-label>
-                    </q-item-section>
-                  </q-item>
-                  <q-item>
-                    <q-item-section>
-                      <q-item-label caption>Avg Processing Time</q-item-label>
-                      <q-item-label class="text-h6 text-deep-orange">1.2s</q-item-label>
-                    </q-item-section>
-                  </q-item>
-                </q-list>
-              </q-card-section>
-            </q-card>
-          </div>
-  
-          <!-- Right Panel - Results -->
-          <div class="col-12 col-md-7">
-            <!-- Image Display with Bounding Boxes -->
-            <q-card flat bordered class="results-card">
-              <q-card-section>
-                <div class="text-h6 q-mb-md">
-                  <q-icon name="visibility" class="q-mr-sm" />
-                  Detection Results
-                  <q-btn
-                    v-if="hasResults"
-                    flat
-                    dense
-                    round
-                    icon="download"
-                    color="primary"
-                    class="float-right"
-                    @click="downloadResults"
-                  >
-                    <q-tooltip>Download Results</q-tooltip>
-                  </q-btn>
-                </div>
-  
-                <!-- Image Container -->
-                <div v-if="currentImage" class="image-container">
-                  <div class="image-wrapper">
-                    <img
-                      :src="currentImageUrl"
-                      alt="Analyzed underwater image"
-                      class="analyzed-image"
-                    />
-                    <!-- Bounding Boxes Overlay -->
-                    <div
-                      v-for="(detection, index) in detections"
-                      :key="index"
-                      class="bounding-box"
-                      :style="getBoundingBoxStyle(detection)"
-                    >
-                      <div class="box-label">
-                        {{ detection.species }}
-                        <span class="confidence">{{ (detection.confidence * 100).toFixed(1) }}%</span>
+                        <q-img
+                          :src="sample.thumbnail"
+                          ratio="1"
+                          class="sample-thumbnail cursor-pointer rounded-borders"
+                          :class="{ 'sample-selected': selectedClassificationSample === index }"
+                          @click="selectClassificationSample(index)"
+                        >
+                          <div class="absolute-bottom text-caption text-center">
+                            Sample {{ index + 1 }}
+                          </div>
+                        </q-img>
                       </div>
                     </div>
-                  </div>
   
-                  <!-- Toggle View Button -->
-                  <div class="q-mt-md text-center">
-                    <q-btn-toggle
-                      v-model="viewMode"
-                      toggle-color="primary"
-                      :options="[
-                        { label: 'Annotated', value: 'annotated' },
-                        { label: 'Original', value: 'original' },
-                        { label: 'Side-by-Side', value: 'side-by-side' }
-                      ]"
+                    <!-- Analyze Button -->
+                    <q-btn
+                      unelevated
+                      color="primary"
+                      size="lg"
+                      class="full-width"
+                      label="Classify Image"
+                      icon="psychology"
+                      :loading="isClassifying"
+                      :disable="!classificationImage"
+                      @click="classifyImage"
                     />
-                  </div>
-                </div>
+                  </q-card-section>
+                </q-card>
   
-                <!-- Placeholder when no image -->
-                <div v-else class="placeholder-container">
-                  <q-icon name="image_search" size="120px" color="grey-5" />
-                  <p class="text-h6 text-grey-6 q-mt-md">
-                    Upload or select an image to begin analysis
-                  </p>
-                </div>
-              </q-card-section>
-            </q-card>
+                <!-- Species Categories -->
+                <q-card flat bordered class="q-mt-md">
+                  <q-card-section>
+                    <div class="text-h6 q-mb-md">
+                      <q-icon name="list_alt" class="q-mr-sm" />
+                      Species Categories
+                    </div>
+                    <q-list dense>
+                      <q-item v-for="(species, index) in speciesCategories" :key="index">
+                        <q-item-section avatar>
+                          <q-avatar color="primary" text-color="white" size="sm">
+                            {{ index + 1 }}
+                          </q-avatar>
+                        </q-item-section>
+                        <q-item-section>
+                          <q-item-label>{{ species }}</q-item-label>
+                        </q-item-section>
+                      </q-item>
+                    </q-list>
+                  </q-card-section>
+                </q-card>
+              </div>
   
-            <!-- Detection Details -->
-            <q-card v-if="hasResults" flat bordered class="q-mt-md">
-              <q-card-section>
-                <div class="text-h6 q-mb-md">
-                  <q-icon name="list" class="q-mr-sm" />
-                  Detected Species ({{ detections.length }})
-                </div>
+              <!-- Right Panel - Results -->
+              <div class="col-12 col-md-7">
+                <q-card flat bordered class="results-card">
+                  <q-card-section>
+                    <div class="text-h6 q-mb-md">
+                      <q-icon name="analytics" class="q-mr-sm" />
+                      Classification Results
+                    </div>
   
-                <q-list bordered separator>
-                  <q-item
-                    v-for="(detection, index) in sortedDetections"
-                    :key="index"
-                    clickable
-                    v-ripple
-                    @click="showSpeciesInfo(detection)"
-                  >
-                    <q-item-section avatar>
-                      <q-avatar rounded size="60px">
-                        <img :src="detection.thumbnail" />
-                      </q-avatar>
-                    </q-item-section>
-  
-                    <q-item-section>
-                      <q-item-label class="text-weight-bold">
-                        {{ detection.species }}
-                      </q-item-label>
-                      <q-item-label caption>
-                        {{ detection.scientificName }}
-                      </q-item-label>
-                      <q-linear-progress
-                        :value="detection.confidence"
-                        :color="getConfidenceColor(detection.confidence)"
-                        class="q-mt-sm"
-                        size="8px"
+                    <!-- Image Display -->
+                    <div v-if="classificationImage" class="image-container q-mb-lg">
+                      <q-img
+                        :src="classificationImageUrl"
+                        class="rounded-borders"
+                        style="max-height: 400px"
                       />
-                    </q-item-section>
-  
-                    <q-item-section side>
-                      <q-badge
-                        :color="getConfidenceColor(detection.confidence)"
-                        :label="`${(detection.confidence * 100).toFixed(1)}%`"
-                      />
-                    </q-item-section>
-  
-                    <q-item-section side>
-                      <q-icon name="info" color="grey-6" />
-                    </q-item-section>
-                  </q-item>
-                </q-list>
-              </q-card-section>
-            </q-card>
-  
-            <!-- Processing Stats -->
-            <q-card v-if="hasResults" flat bordered class="q-mt-md">
-              <q-card-section>
-                <div class="row q-col-gutter-md text-center">
-                  <div class="col-4">
-                    <div class="stat-box">
-                      <q-icon name="timer" size="sm" color="primary" />
-                      <div class="text-h6 q-mt-sm">{{ processingTime }}s</div>
-                      <div class="text-caption text-grey-7">Processing Time</div>
                     </div>
-                  </div>
-                  <div class="col-4">
-                    <div class="stat-box">
-                      <q-icon name="pets" size="sm" color="teal" />
-                      <div class="text-h6 q-mt-sm">{{ detections.length }}</div>
-                      <div class="text-caption text-grey-7">Species Found</div>
+  
+                    <!-- Placeholder -->
+                    <div v-else class="placeholder-container">
+                      <q-icon name="image_search" size="120px" color="grey-5" />
+                      <p class="text-h6 text-grey-6 q-mt-md">
+                        Upload an image to begin classification
+                      </p>
                     </div>
-                  </div>
-                  <div class="col-4">
-                    <div class="stat-box">
-                      <q-icon name="high_quality" size="sm" color="green" />
-                      <div class="text-h6 q-mt-sm">{{ avgConfidence }}%</div>
-                      <div class="text-caption text-grey-7">Avg Confidence</div>
+  
+                    <!-- Classification Results -->
+                    <div v-if="classificationResults.length > 0">
+                      <q-separator class="q-my-md" />
+                      <div class="text-subtitle1 text-weight-bold q-mb-md">
+                        Prediction Confidence
+                      </div>
+                      <q-list bordered separator>
+                        <q-item v-for="(result, index) in classificationResults" :key="index">
+                          <q-item-section>
+                            <q-item-label class="text-weight-bold">
+                              {{ result.species }}
+                            </q-item-label>
+                            <q-linear-progress
+                              :value="result.confidence"
+                              :color="getConfidenceColor(result.confidence)"
+                              class="q-mt-sm"
+                              size="12px"
+                            >
+                              <div class="absolute-full flex flex-center">
+                                <q-badge
+                                  color="white"
+                                  :text-color="getConfidenceColor(result.confidence)"
+                                  :label="`${(result.confidence * 100).toFixed(1)}%`"
+                                />
+                              </div>
+                            </q-linear-progress>
+                          </q-item-section>
+                          <q-item-section side v-if="index === 0">
+                            <q-badge color="green" label="Top Prediction" />
+                          </q-item-section>
+                        </q-item>
+                      </q-list>
                     </div>
-                  </div>
-                </div>
-              </q-card-section>
-            </q-card>
-          </div>
-        </div>
+                  </q-card-section>
+                </q-card>
+              </div>
+            </div>
+          </q-tab-panel>
+  
+          <!-- TASK 2: OBJECT DETECTION -->
+          <q-tab-panel name="detection">
+            <div class="row q-col-gutter-lg">
+              <!-- Left Panel - Upload & Controls -->
+              <div class="col-12 col-md-5">
+                <q-card flat bordered class="upload-card">
+                  <q-card-section>
+                    <div class="text-h6 q-mb-md">
+                      <q-icon name="radar" class="q-mr-sm" />
+                      Upload Image for Detection
+                    </div>
+                    <div class="text-caption text-grey-7 q-mb-md">
+                      Detect and localize multiple benthic organisms with bounding boxes
+                    </div>
+  
+                    <!-- File Upload -->
+                    <q-file
+                      v-model="detectionFile"
+                      filled
+                      accept="image/*"
+                      label="Choose underwater image"
+                      @update:model-value="handleDetectionUpload"
+                      class="q-mb-md"
+                    >
+                      <template v-slot:prepend>
+                        <q-icon name="image" />
+                      </template>
+                      <template v-slot:append>
+                        <q-icon
+                          v-if="detectionFile"
+                          name="close"
+                          @click.stop.prevent="clearDetection"
+                          class="cursor-pointer"
+                        />
+                      </template>
+                    </q-file>
+  
+                    <!-- Sample Images -->
+                    <div class="text-subtitle2 q-mb-sm">Or try our samples:</div>
+                    <div class="row q-col-gutter-sm q-mb-lg">
+                      <div
+                        v-for="(sample, index) in detectionSamples"
+                        :key="index"
+                        class="col-6"
+                      >
+                        <q-img
+                          :src="sample.thumbnail"
+                          ratio="1"
+                          class="sample-thumbnail cursor-pointer rounded-borders"
+                          :class="{ 'sample-selected': selectedDetectionSample === index }"
+                          @click="selectDetectionSample(index)"
+                        >
+                          <div class="absolute-bottom text-caption text-center">
+                            {{ sample.name }}
+                          </div>
+                        </q-img>
+                      </div>
+                    </div>
+  
+                    <!-- Analyze Button -->
+                    <q-btn
+                      unelevated
+                      color="primary"
+                      size="lg"
+                      class="full-width"
+                      label="Detect Objects"
+                      icon="radar"
+                      :loading="isDetecting"
+                      :disable="!detectionImage"
+                      @click="detectObjects"
+                    />
+                  </q-card-section>
+                </q-card>
+  
+                <!-- Model Performance Card -->
+                <q-card flat bordered class="q-mt-md">
+                  <q-card-section>
+                    <div class="text-h6 q-mb-md">
+                      <q-icon name="insights" class="q-mr-sm" />
+                      Model Performance
+                    </div>
+                    <q-list dense>
+                      <q-item>
+                        <q-item-section>
+                          <q-item-label caption>Detection Accuracy</q-item-label>
+                          <q-linear-progress
+                            size="20px"
+                            :value="0.92"
+                            color="green"
+                            class="q-mt-sm"
+                          >
+                            <div class="absolute-full flex flex-center">
+                              <q-badge color="white" text-color="green" label="92.4%" />
+                            </div>
+                          </q-linear-progress>
+                        </q-item-section>
+                      </q-item>
+                      <q-item>
+                        <q-item-section>
+                          <q-item-label caption>Training Images</q-item-label>
+                          <q-item-label class="text-h6 text-primary">15,200+</q-item-label>
+                        </q-item-section>
+                      </q-item>
+                      <q-item>
+                        <q-item-section>
+                          <q-item-label caption>Avg Processing Time</q-item-label>
+                          <q-item-label class="text-h6 text-teal">1.5s</q-item-label>
+                        </q-item-section>
+                      </q-item>
+                    </q-list>
+                  </q-card-section>
+                </q-card>
+              </div>
+  
+              <!-- Right Panel - Results -->
+              <div class="col-12 col-md-7">
+                <!-- Image Display with Bounding Boxes -->
+                <q-card flat bordered class="results-card">
+                  <q-card-section>
+                    <div class="text-h6 q-mb-md">
+                      <q-icon name="visibility" class="q-mr-sm" />
+                      Detection Results
+                      <q-btn
+                        v-if="hasDetections"
+                        flat
+                        dense
+                        round
+                        icon="download"
+                        color="primary"
+                        class="float-right"
+                        @click="downloadResults"
+                      >
+                        <q-tooltip>Download Results</q-tooltip>
+                      </q-btn>
+                    </div>
+  
+                    <!-- Image Container -->
+                    <div v-if="detectionImage" class="image-container">
+                      <div class="image-wrapper">
+                        <img
+                          :src="detectionImageUrl"
+                          alt="Analyzed underwater image"
+                          class="analyzed-image"
+                        />
+                        <!-- Bounding Boxes Overlay -->
+                        <div
+                          v-for="(detection, index) in detections"
+                          :key="index"
+                          class="bounding-box"
+                          :style="getBoundingBoxStyle(detection)"
+                        >
+                          <div class="box-label">
+                            {{ detection.species }}
+                            <span class="confidence">{{ (detection.confidence * 100).toFixed(1) }}%</span>
+                          </div>
+                        </div>
+                      </div>
+  
+                      <!-- Toggle View Button -->
+                      <div class="q-mt-md text-center" v-if="hasDetections">
+                        <q-btn-toggle
+                          v-model="viewMode"
+                          toggle-color="primary"
+                          :options="[
+                            { label: 'With Boxes', value: 'annotated' },
+                            { label: 'Original', value: 'original' }
+                          ]"
+                        />
+                      </div>
+                    </div>
+  
+                    <!-- Placeholder when no image -->
+                    <div v-else class="placeholder-container">
+                      <q-icon name="image_search" size="120px" color="grey-5" />
+                      <p class="text-h6 text-grey-6 q-mt-md">
+                        Upload an image to begin detection
+                      </p>
+                    </div>
+                  </q-card-section>
+                </q-card>
+  
+                <!-- Detection Details -->
+                <q-card v-if="hasDetections" flat bordered class="q-mt-md">
+                  <q-card-section>
+                    <div class="text-h6 q-mb-md">
+                      <q-icon name="list" class="q-mr-sm" />
+                      Detected Species ({{ detections.length }})
+                    </div>
+  
+                    <q-list bordered separator>
+                      <q-item
+                        v-for="(detection, index) in sortedDetections"
+                        :key="index"
+                        clickable
+                        v-ripple
+                        @click="showSpeciesInfo(detection)"
+                      >
+                        <q-item-section avatar>
+                          <q-avatar color="primary" text-color="white">
+                            {{ index + 1 }}
+                          </q-avatar>
+                        </q-item-section>
+  
+                        <q-item-section>
+                          <q-item-label class="text-weight-bold">
+                            {{ detection.species }}
+                          </q-item-label>
+                          <q-item-label caption>
+                            {{ detection.scientificName }}
+                          </q-item-label>
+                          <q-linear-progress
+                            :value="detection.confidence"
+                            :color="getConfidenceColor(detection.confidence)"
+                            class="q-mt-sm"
+                            size="8px"
+                          />
+                        </q-item-section>
+  
+                        <q-item-section side>
+                          <q-badge
+                            :color="getConfidenceColor(detection.confidence)"
+                            :label="`${(detection.confidence * 100).toFixed(1)}%`"
+                          />
+                        </q-item-section>
+  
+                        <q-item-section side>
+                          <q-icon name="info" color="grey-6" />
+                        </q-item-section>
+                      </q-item>
+                    </q-list>
+                  </q-card-section>
+                </q-card>
+  
+                <!-- Processing Stats -->
+                <q-card v-if="hasDetections" flat bordered class="q-mt-md">
+                  <q-card-section>
+                    <div class="row q-col-gutter-md text-center">
+                      <div class="col-4">
+                        <div class="stat-box">
+                          <q-icon name="timer" size="sm" color="primary" />
+                          <div class="text-h6 q-mt-sm">{{ processingTime }}s</div>
+                          <div class="text-caption text-grey-7">Processing Time</div>
+                        </div>
+                      </div>
+                      <div class="col-4">
+                        <div class="stat-box">
+                          <q-icon name="pets" size="sm" color="teal" />
+                          <div class="text-h6 q-mt-sm">{{ detections.length }}</div>
+                          <div class="text-caption text-grey-7">Objects Found</div>
+                        </div>
+                      </div>
+                      <div class="col-4">
+                        <div class="stat-box">
+                          <q-icon name="high_quality" size="sm" color="green" />
+                          <div class="text-h6 q-mt-sm">{{ avgConfidence }}%</div>
+                          <div class="text-caption text-grey-7">Avg Confidence</div>
+                        </div>
+                      </div>
+                    </div>
+                  </q-card-section>
+                </q-card>
+              </div>
+            </div>
+          </q-tab-panel>
+        </q-tab-panels>
       </div>
   
       <!-- Species Info Dialog -->
@@ -288,12 +463,6 @@
           </q-card-section>
   
           <q-card-section>
-            <q-img
-              :src="selectedSpecies?.thumbnail"
-              ratio="16/9"
-              class="rounded-borders q-mb-md"
-            />
-            
             <div class="text-subtitle2 text-grey-8 q-mb-xs">
               Scientific Name
             </div>
@@ -338,50 +507,100 @@
   
   const $q = useQuasar()
   
-  // State
-  const uploadedFile = ref(null)
-  const currentImage = ref(null)
-  const currentImageUrl = ref('')
-  const selectedSample = ref(null)
-  const isAnalyzing = ref(false)
+  // Active Task
+  const activeTask = ref('classification')
+  
+  // TASK 1: CLASSIFICATION STATE
+  const classificationFile = ref(null)
+  const classificationImage = ref(null)
+  const classificationImageUrl = ref('')
+  const selectedClassificationSample = ref(null)
+  const isClassifying = ref(false)
+  const classificationResults = ref([])
+  
+  // TASK 2: DETECTION STATE
+  const detectionFile = ref(null)
+  const detectionImage = ref(null)
+  const detectionImageUrl = ref('')
+  const selectedDetectionSample = ref(null)
+  const isDetecting = ref(false)
   const detections = ref([])
   const viewMode = ref('annotated')
   const processingTime = ref(0)
+  
+  // Shared state
   const showSpeciesDialog = ref(false)
   const selectedSpecies = ref(null)
   
-  // Sample Images Data
-  const sampleImages = ref([
+  // Species Categories for Classification (7 categories)
+  const speciesCategories = [
+    'Sea Star',
+    'Sea Urchin',
+    'Sea Anemone',
+    'Sea Cucumber',
+    'Crab',
+    'Coral',
+    'Sponge'
+  ]
+  
+  // Sample Images for Classification
+  const classificationSamples = ref([
     {
-      name: 'Coral Reef',
-      thumbnail: '/samples/coral-thumb.jpg',
-      url: '/samples/coral-full.jpg'
+      thumbnail: '/samples/class-1.jpg',
+      url: '/samples/class-1-full.jpg'
     },
     {
-      name: 'Deep Sea',
-      thumbnail: '/samples/deepsea-thumb.jpg',
-      url: '/samples/deepsea-full.jpg'
+      thumbnail: '/samples/class-2.jpg',
+      url: '/samples/class-2-full.jpg'
     },
     {
-      name: 'Rocky Bottom',
-      thumbnail: '/samples/rocky-thumb.jpg',
-      url: '/samples/rocky-full.jpg'
-    },
-    {
-      name: 'Sandy Floor',
-      thumbnail: '/samples/sandy-thumb.jpg',
-      url: '/samples/sandy-full.jpg'
+      thumbnail: '/samples/class-3.jpg',
+      url: '/samples/class-3-full.jpg'
     }
   ])
   
-  // Mock detection results for demonstration
+  // Sample Images for Detection
+  const detectionSamples = ref([
+    {
+      name: 'Coral Reef',
+      thumbnail: '/samples/detect-coral.jpg',
+      url: '/samples/detect-coral-full.jpg'
+    },
+    {
+      name: 'Rocky Bottom',
+      thumbnail: '/samples/detect-rocky.jpg',
+      url: '/samples/detect-rocky-full.jpg'
+    },
+    {
+      name: 'Deep Sea',
+      thumbnail: '/samples/detect-deep.jpg',
+      url: '/samples/detect-deep-full.jpg'
+    },
+    {
+      name: 'Sandy Floor',
+      thumbnail: '/samples/detect-sandy.jpg',
+      url: '/samples/detect-sandy-full.jpg'
+    }
+  ])
+  
+  // Mock classification results
+  const mockClassificationResults = [
+    { species: 'Sea Star', confidence: 0.947 },
+    { species: 'Sea Urchin', confidence: 0.032 },
+    { species: 'Sea Anemone', confidence: 0.012 },
+    { species: 'Crab', confidence: 0.005 },
+    { species: 'Coral', confidence: 0.002 },
+    { species: 'Sea Cucumber', confidence: 0.001 },
+    { species: 'Sponge', confidence: 0.001 }
+  ]
+  
+  // Mock detection results
   const mockDetections = [
     {
-      species: 'Common Sea Star',
+      species: 'Sea Star',
       scientificName: 'Asterias rubens',
       confidence: 0.947,
       bbox: { x: 15, y: 20, width: 25, height: 30 },
-      thumbnail: '/species/seastar.jpg',
       habitat: 'Rocky substrates, shallow waters',
       depthRange: '0-200 meters',
       conservation: 'Least Concern'
@@ -391,25 +610,23 @@
       scientificName: 'Strongylocentrotus droebachiensis',
       confidence: 0.892,
       bbox: { x: 60, y: 45, width: 18, height: 22 },
-      thumbnail: '/species/urchin.jpg',
       habitat: 'Kelp forests, rocky reefs',
       depthRange: '0-1200 meters',
       conservation: 'Least Concern'
     },
     {
-      species: 'Anemone',
+      species: 'Sea Anemone',
       scientificName: 'Urticina felina',
       confidence: 0.876,
       bbox: { x: 35, y: 60, width: 20, height: 25 },
-      thumbnail: '/species/anemone.jpg',
       habitat: 'Attached to rocks and shells',
       depthRange: '0-100 meters',
       conservation: 'Least Concern'
     }
   ]
   
-  // Computed
-  const hasResults = computed(() => detections.value.length > 0)
+  // COMPUTED
+  const hasDetections = computed(() => detections.value.length > 0)
   
   const sortedDetections = computed(() => {
     return [...detections.value].sort((a, b) => b.confidence - a.confidence)
@@ -421,52 +638,98 @@
     return ((sum / detections.value.length) * 100).toFixed(1)
   })
   
-  // Methods
-  function handleFileUpload(file) {
+  // CLASSIFICATION METHODS
+  function handleClassificationUpload(file) {
     if (file) {
-      selectedSample.value = null
-      currentImage.value = 'uploaded'
-      currentImageUrl.value = URL.createObjectURL(file)
-      detections.value = []
+      selectedClassificationSample.value = null
+      classificationImage.value = 'uploaded'
+      classificationImageUrl.value = URL.createObjectURL(file)
+      classificationResults.value = []
     }
   }
   
-  function clearUpload() {
-    uploadedFile.value = null
-    currentImage.value = null
-    currentImageUrl.value = ''
-    detections.value = []
+  function clearClassification() {
+    classificationFile.value = null
+    classificationImage.value = null
+    classificationImageUrl.value = ''
+    classificationResults.value = []
   }
   
-  function selectSample(index) {
-    selectedSample.value = index
-    uploadedFile.value = null
-    currentImage.value = sampleImages.value[index].name
-    currentImageUrl.value = sampleImages.value[index].url
-    detections.value = []
+  function selectClassificationSample(index) {
+    selectedClassificationSample.value = index
+    classificationFile.value = null
+    classificationImage.value = classificationSamples.value[index].url
+    classificationImageUrl.value = classificationSamples.value[index].url
+    classificationResults.value = []
   }
   
-  async function analyzeImage() {
-    isAnalyzing.value = true
-    detections.value = []
+  async function classifyImage() {
+    isClassifying.value = true
+    classificationResults.value = []
     
-    // Simulate API call to ML model
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1500))
     
-    // Set mock results
-    detections.value = mockDetections
-    processingTime.value = 1.2
+    // Set results
+    classificationResults.value = mockClassificationResults
     
-    isAnalyzing.value = false
+    isClassifying.value = false
     
     $q.notify({
       type: 'positive',
-      message: `Analysis complete! Found ${detections.value.length} species.`,
+      message: 'Classification complete!',
       position: 'top',
       timeout: 2000
     })
   }
   
+  // DETECTION METHODS
+  function handleDetectionUpload(file) {
+    if (file) {
+      selectedDetectionSample.value = null
+      detectionImage.value = 'uploaded'
+      detectionImageUrl.value = URL.createObjectURL(file)
+      detections.value = []
+    }
+  }
+  
+  function clearDetection() {
+    detectionFile.value = null
+    detectionImage.value = null
+    detectionImageUrl.value = ''
+    detections.value = []
+  }
+  
+  function selectDetectionSample(index) {
+    selectedDetectionSample.value = index
+    detectionFile.value = null
+    detectionImage.value = detectionSamples.value[index].name
+    detectionImageUrl.value = detectionSamples.value[index].url
+    detections.value = []
+  }
+  
+  async function detectObjects() {
+    isDetecting.value = true
+    detections.value = []
+    
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
+    // Set results
+    detections.value = mockDetections
+    processingTime.value = 1.5
+    
+    isDetecting.value = false
+    
+    $q.notify({
+      type: 'positive',
+      message: `Detection complete! Found ${detections.value.length} objects.`,
+      position: 'top',
+      timeout: 2000
+    })
+  }
+  
+  // SHARED METHODS
   function getBoundingBoxStyle(detection) {
     if (viewMode.value === 'original') return { display: 'none' }
     
@@ -502,7 +765,8 @@
   
   function downloadResults() {
     const results = {
-      image: currentImage.value,
+      task: 'Object Detection',
+      image: detectionImage.value,
       processingTime: processingTime.value,
       detections: detections.value.map(d => ({
         species: d.species,
@@ -516,7 +780,7 @@
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `benthic-analysis-${Date.now()}.json`
+    link.download = `detection-results-${Date.now()}.json`
     link.click()
     URL.revokeObjectURL(url)
     
