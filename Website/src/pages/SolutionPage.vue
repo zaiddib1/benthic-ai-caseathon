@@ -534,13 +534,13 @@
   
   // Species Categories for Classification (7 categories)
   const speciesCategories = [
-    'Sea Star',
-    'Sea Urchin',
-    'Sea Anemone',
-    'Sea Cucumber',
+    'Eel',
+    'Scallop',
     'Crab',
-    'Coral',
-    'Sponge'
+    'Flatfish',
+    'Roundfish',
+    'Skate',
+    'Whelk'
   ]
   
   // Sample Images for Classification
