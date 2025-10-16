@@ -21,9 +21,9 @@
     &middot;
     <a href="https://huggingface.co/spaces/dshi01/benthic_obj_detect">YOLO Demo</a>
     &middot;
-    <a href="https://github.com/your_username/benthicai/issues/new?labels=bug">Report Bug</a>
+    <a href="https://github.com/zaiddib1/benthic-ai-caseathon/issues/new?labels=bug">Report Bug</a>
     &middot;
-    <a href="https://github.com/your_username/benthicai/issues/new?labels=enhancement">Request Feature</a>
+    <a href="https://github.com/zaiddib1/benthic-ai-caseathon/issues/new?labels=enhancement">Request Feature</a>
   </p>
 </div>
 
@@ -100,8 +100,8 @@ npm install
 
 3. Configure Gradio embed URLs in `/src/pages/ModelsPage.vue`  
 ```js
-const classificationEmbed = "https://huggingface.co/spaces/username/convnext-benthic";
-const detectionEmbed = "https://huggingface.co/spaces/username/yolo-benthic";
+const classificationEmbed = "https://huggingface.co/spaces/dshi01/benthic_classification";
+const detectionEmbed = "https://huggingface.co/spaces/dshi01/benthic_obj_detect";
 ```
 
 4. Run the app locally  
@@ -169,8 +169,8 @@ Contributions are welcome!
 5. Open a Pull Request  
 
 Top contributors:  
-<a href="https://github.com/your_username/benthicai/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=your_username/benthicai" />
+<a href="https://github.com/zaiddib1/benthic-ai-caseathon/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=zaiddib1/benthic-ai-caseathon" />
 </a>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -212,15 +212,15 @@ mcmartinez@wm.edu
 
 ---
 
-[contributors-shield]: https://img.shields.io/github/contributors/your_username/benthicai.svg?style=for-the-badge
-[contributors-url]: https://github.com/your_username/benthicai/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/your_username/benthicai.svg?style=for-the-badge
-[forks-url]: https://github.com/your_username/benthicai/network/members
-[stars-shield]: https://img.shields.io/github/stars/your_username/benthicai.svg?style=for-the-badge
-[stars-url]: https://github.com/your_username/benthicai/stargazers
-[issues-shield]: https://img.shields.io/github/issues/your_username/benthicai.svg?style=for-the-badge
-[issues-url]: https://github.com/your_username/benthicai/issues
-[license-shield]: https://img.shields.io/github/license/your_username/benthicai.svg?style=for-the-badge
-[license-url]: https://github.com/your_username/benthicai/blob/master/LICENSE.txt
+[contributors-shield]: https://img.shields.io/github/contributors/zaiddib1/benthic-ai-caseathon.svg?style=for-the-badge
+[contributors-url]: https://github.com/zaiddib1/benthic-ai-caseathon/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/zaiddib1/benthic-ai-caseathon.svg?style=for-the-badge
+[forks-url]: https://github.com/zaiddib1/benthic-ai-caseathon/network/members
+[stars-shield]: https://img.shields.io/github/stars/zaiddib1/benthic-ai-caseathon.svg?style=for-the-badge
+[stars-url]: https://github.com/zaiddib1/benthic-ai-caseathon/stargazers
+[issues-shield]: https://img.shields.io/github/issues/zaiddib1/benthic-ai-caseathon.svg?style=for-the-badge
+[issues-url]: https://github.com/zaiddib1/benthic-ai-caseathon/issues
+[license-shield]: https://img.shields.io/github/license/zaiddib1/benthic-ai-caseathon.svg?style=for-the-badge
+[license-url]: https://github.com/zaiddib1/benthic-ai-caseathon/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://linkedin.com/in/yourprofile
+[linkedin-url]: https://linkedin.com/in/danielhshi
