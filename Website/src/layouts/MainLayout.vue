@@ -1,7 +1,7 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header elevated class="header-gradient">
-      <q-toolbar>
+    <q-header elevated class="modern-header">
+      <q-toolbar class="header-toolbar">
         <q-btn
           flat
           dense
@@ -12,14 +12,16 @@
           class="q-mr-sm"
         />
 
-        <q-toolbar-title class="text-weight-bold">
-          <div class="flex items-center">
-            <q-icon name="waves" size="sm" class="q-mr-sm" />
-            BenthicAI
+        <q-toolbar-title class="brand-title">
+          <div class="brand-wrapper">
+            <div class="brand-icon">
+              <q-icon name="waves" size="24px" />
+            </div>
+            <span class="brand-name">BenthicAI</span>
           </div>
         </q-toolbar-title>
 
-        <q-tabs v-model="activeTab" class="gt-sm">
+        <q-tabs v-model="activeTab" class="gt-sm nav-tabs">
           <q-route-tab name="home" to="/" label="Home" />
           <q-route-tab name="solution" to="/solution" label="Our Solution" />
           <q-route-tab name="game" to="/game" label="Species Game" />
@@ -41,14 +43,14 @@
       v-model="leftDrawerOpen"
       show-if-above
       bordered
-      class="drawer-ocean"
+      class="modern-drawer"
     >
       <q-list>
-        <q-item-label header class="text-weight-bold">
+        <q-item-label header class="drawer-header">
           Navigation
         </q-item-label>
 
-        <q-item clickable v-ripple to="/" exact>
+        <q-item clickable v-ripple to="/" exact class="drawer-item">
           <q-item-section avatar>
             <q-icon name="home" />
           </q-item-section>
@@ -57,7 +59,7 @@
           </q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple to="/solution">
+        <q-item clickable v-ripple to="/solution" class="drawer-item">
           <q-item-section avatar>
             <q-icon name="psychology" />
           </q-item-section>
@@ -67,7 +69,7 @@
           </q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple to="/game">
+        <q-item clickable v-ripple to="/game" class="drawer-item">
           <q-item-section avatar>
             <q-icon name="casino" />
           </q-item-section>
@@ -79,11 +81,11 @@
 
         <q-separator class="q-my-md" />
 
-        <q-item-label header class="text-weight-bold">
+        <q-item-label header class="drawer-header">
           Resources
         </q-item-label>
 
-        <q-item clickable v-ripple to="/about">
+        <q-item clickable v-ripple to="/about" class="drawer-item">
           <q-item-section avatar>
             <q-icon name="info" />
           </q-item-section>
@@ -92,7 +94,7 @@
           </q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple to="/data">
+        <q-item clickable v-ripple to="/data" class="drawer-item">
           <q-item-section avatar>
             <q-icon name="dataset" />
           </q-item-section>
@@ -107,16 +109,17 @@
       <router-view />
     </q-page-container>
 
-    <q-footer elevated class="footer-ocean">
-      <q-toolbar>
-        <q-toolbar-title class="text-caption">
-          <div class="row items-center justify-between">
-            <div>
-              © 2025 BenthicAI | Marine Biodiversity Conservation
+    <q-footer elevated class="modern-footer">
+      <q-toolbar class="footer-toolbar">
+        <q-toolbar-title>
+          <div class="footer-content">
+            <div class="footer-left">
+              <q-icon name="copyright" size="16px" class="q-mr-xs" />
+              <span>2025 BenthicAI | Marine Biodiversity Conservation</span>
             </div>
-            <div class="q-gutter-sm">
-              <q-icon name="eco" size="xs" />
-              <span class="text-caption">Powered by AI & Marine Science</span>
+            <div class="footer-right">
+              <q-icon name="eco" size="18px" class="q-mr-xs" />
+              <span>Powered by AI & Marine Science</span>
             </div>
           </div>
         </q-toolbar-title>
@@ -137,19 +140,144 @@ function toggleLeftDrawer() {
 </script>
 
 <style scoped lang="scss">
-.header-gradient {
-  background: linear-gradient(135deg, #006994 0%, #0a4d68 50%, #1a3a52 100%);
+// HEADER
+.modern-header {
+  background: linear-gradient(135deg, #0575E6 0%, #021B79 100%);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
-.drawer-ocean {
-  background: linear-gradient(180deg, #e8f4f8 0%, #d4e7ed 100%);
+.header-toolbar {
+  min-height: 70px;
 }
 
-.footer-ocean {
-  background: linear-gradient(90deg, #0a3d62 0%, #0c2f48 100%);
+.brand-title {
+  flex-shrink: 0;
 }
 
-.q-toolbar {
-  min-height: 64px;
+.brand-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand-icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.brand-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -0.01em;
+}
+
+.nav-tabs {
+  color: rgba(255, 255, 255, 0.9);
+  
+  :deep(.q-tab) {
+    font-weight: 600;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+  
+  :deep(.q-tab--active) {
+    background: rgba(255, 255, 255, 0.15);
+  }
+  
+  :deep(.q-tab__indicator) {
+    background: white;
+    height: 3px;
+    border-radius: 3px 3px 0 0;
+  }
+}
+
+// DRAWER
+.modern-drawer {
+  background: linear-gradient(180deg, #f5f7fa 0%, #ffffff 100%);
+}
+
+.drawer-header {
+  font-weight: 700;
+  color: #667eea;
+  padding: 1rem 1rem 0.5rem;
+}
+
+.drawer-item {
+  border-radius: 10px;
+  margin: 0.25rem 0.5rem;
+  transition: all 0.3s;
+  
+  &:hover {
+    background: rgba(102, 126, 234, 0.1);
+  }
+  
+  &.q-router-link--active {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+    color: #667eea;
+    
+    :deep(.q-item__label) {
+      font-weight: 700;
+    }
+  }
+}
+
+// FOOTER
+.modern-footer {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.footer-toolbar {
+  min-height: 60px;
+  padding: 0 2rem;
+  
+  @media (max-width: 768px) {
+    padding: 0 1rem;
+  }
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  width: 100%;
+  font-size: 0.875rem;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+}
+
+.footer-left,
+.footer-right {
+  display: flex;
+  align-items: center;
+  
+  @media (max-width: 768px) {
+    justify-content: center;
+  }
+}
+
+.footer-right {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 </style>
