@@ -65,7 +65,7 @@ export const speciesData: SpeciesInfo[] = [
   {
     id: 'roundfish',
     name: 'Roundfish',
-    scientificName: 'Gadiformes',
+    scientificName: 'Gadiformes/Perciformes',
     images: generateImages('roundfish'),
     facts: 'Roundfish like cod can produce millions of eggs in a single spawning season to ensure species survival.',
     habitat: 'Open water and near seafloor',
