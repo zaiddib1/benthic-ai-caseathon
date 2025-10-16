@@ -152,7 +152,7 @@ Model outputs:
 - [ ] Add multilingual support (EN, KR, ES)  
 - [ ] Connect to live ROV camera feeds  
 
-See [open issues](https://github.com/dshi01/benthic-ai-caseathon/issues) for current progress.
+See [open issues](https://github.com/zaiddib1/benthic-ai-caseathon/issues) for current progress.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
