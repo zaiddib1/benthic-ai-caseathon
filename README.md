@@ -6,7 +6,7 @@
 <br />
 <div align="center">
   <a href="https://ai-caseathon.web.app/">
-    <img src="images/waves.svg" alt="Logo" width="100" height="100">
+    <img src="icons/waves.png" alt="Logo" width="100" height="100">
   </a>
 
   <h3 align="center">BenthicAI</h3>
