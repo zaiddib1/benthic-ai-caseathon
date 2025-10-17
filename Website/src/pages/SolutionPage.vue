@@ -7,6 +7,8 @@
           <q-icon name="auto_awesome" size="16px" />
           <span>AI-Powered Computer Vision</span>
         </div>
+
+
         <h1 class="hero-title">
           Benthic Species Identification
         </h1>
@@ -84,10 +86,11 @@
                 </div>
 
                 <q-file
-                  v-model="classificationFile"
+                  v-model="classificationFiles"
                   filled
+                  multiple
                   accept="image/*"
-                  label="Choose or drag image here"
+                  label="Choose or drag image(s) here"
                   @update:model-value="handleClassificationUpload"
                   class="modern-file-input"
                   bg-color="grey-1"
@@ -98,7 +101,7 @@
                   </template>
                   <template v-slot:append>
                     <q-icon
-                      v-if="classificationFile"
+                      v-if="classificationFiles && classificationFiles.length"
                       name="close"
                       @click.stop.prevent="clearClassification"
                       class="cursor-pointer"
@@ -112,7 +115,7 @@
                   <div class="section-label">
                     <span>Sample Images</span>
                     <q-icon name="info" size="16px" color="grey-6">
-                      <q-tooltip>Click to use pre-loaded samples</q-tooltip>
+                      <q-tooltip>Click to (multi)select samples; click again to unselect</q-tooltip>
                     </q-icon>
                   </div>
                   <div class="samples-grid">
@@ -120,15 +123,15 @@
                       v-for="(sample, index) in classificationSamples"
                       :key="index"
                       class="sample-card"
-                      :class="{ 'sample-active': selectedClassificationSample === index }"
-                      @click="selectClassificationSample(index)"
+                      :class="{ 'sample-active': selectedClassificationSamples.includes(index) }"
+                      @click="toggleClassificationSample(index)"
                     >
                       <q-img
                         :src="sample.thumbnail"
                         ratio="1"
                         class="sample-image"
                       >
-                        <div class="sample-overlay">
+                        <div class="sample-overlay" v-show="selectedClassificationSamples.includes(index)">
                           <q-icon name="check_circle" size="24px" color="white" />
                         </div>
                       </q-img>
@@ -144,11 +147,11 @@
                   size="lg"
                   class="action-btn"
                   :loading="isClassifying"
-                  :disable="!classificationImage"
+                  :disable="classifyGallery.length === 0"
                   @click="classifyImage"
                 >
                   <q-icon name="psychology" size="20px" class="q-mr-sm" />
-                  <span>Analyze Image</span>
+                  <span>Analyze {{ classifyGallery.length ? `(${classifyGallery.length})` : 'Image' }}</span>
                   <template v-slot:loading>
                     <q-spinner-dots size="20px" />
                     <span class="q-ml-sm">Processing...</span>
@@ -181,13 +184,17 @@
                     <q-icon name="analytics" color="primary" size="24px" />
                     <span>Results</span>
                   </div>
-                  <q-badge v-if="classificationResults.length > 0" color="green" :label="`Confidence: ${(classificationResults[0]?.confidence * 100).toFixed(1)}%`" />
+                  <div class="header-actions" v-if="classifyGallery.length">
+                    <q-btn dense flat size="sm" icon="chevron_left" @click="prevClassification" :disable="currentClassificationIndex === 0" />
+                    <q-badge v-if="classificationResults.length > 0" color="green" :label="`Confidence: ${(classificationResults[0]?.confidence * 100).toFixed(1)}%`" />
+                    <q-btn dense flat size="sm" icon="chevron_right" @click="nextClassification" :disable="currentClassificationIndex >= classifyGallery.length - 1" />
+                  </div>
                 </div>
 
                 <!-- Image Preview -->
-                <div v-if="classificationImage" class="image-preview">
+                <div v-if="currentClassificationImageUrl" class="image-preview">
                   <q-img
-                    :src="classificationImageUrl"
+                    :src="currentClassificationImageUrl"
                     class="preview-image"
                     fit="contain"
                   >
@@ -211,8 +218,8 @@
                 <div v-if="classificationResults.length > 0" class="results-content">
                   <div class="results-header">
                     <span class="results-title">Predictions</span>
-                    <q-btn flat dense round size="sm" icon="refresh" color="grey-7">
-                      <q-tooltip>Reanalyze</q-tooltip>
+                    <q-btn flat dense round size="sm" icon="refresh" color="grey-7" @click="classifyImage">
+                      <q-tooltip>Reanalyze all</q-tooltip>
                     </q-btn>
                   </div>
 
@@ -239,6 +246,35 @@
                       />
                     </div>
                   </div>
+
+                  <!-- Thumbnail strip -->
+                  <div class="detections-content q-mt-md" v-if="classifyGallery.length > 1">
+                    <div
+                      v-for="(item, idx) in classifyGallery"
+                      :key="idx"
+                      class="detection-item"
+                      @click="goToClassification(idx)"
+                      :style="{ opacity: idx === currentClassificationIndex ? 1 : 0.8 }"
+                    >
+                      <div class="detection-number">{{ idx + 1 }}</div>
+                      <div class="detection-info">
+                        <div class="detection-name">Image {{ idx + 1 }}</div>
+                        <div class="detection-scientific">{{ classifyGallery[idx]?.results?.[0]?.species || '—' }}</div>
+                        <q-linear-progress
+                          :value="classifyGallery[idx]?.results?.[0]?.confidence || 0"
+                          :color="getConfidenceColor(classifyGallery[idx]?.results?.[0]?.confidence || 0)"
+                          size="4px"
+                          rounded
+                          class="q-mt-xs"
+                        />
+                      </div>
+                      <div class="detection-confidence" v-if="classifyGallery[idx]?.results?.length">
+                        <q-badge :color="getConfidenceColor(classifyGallery[idx]?.results?.[0]?.confidence || 0)" :label="`${((classifyGallery[idx]?.results?.[0]?.confidence || 0) * 100).toFixed(1)}%`" />
+                        <q-icon name="chevron_right" size="20px" color="grey-5" class="q-ml-xs" />
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
             </div>
@@ -261,10 +297,11 @@
                 </div>
 
                 <q-file
-                  v-model="detectionFile"
+                  v-model="detectionFiles"
                   filled
+                  multiple
                   accept="image/*"
-                  label="Choose or drag image here"
+                  label="Choose or drag image(s) here"
                   @update:model-value="handleDetectionUpload"
                   class="modern-file-input"
                   bg-color="grey-1"
@@ -275,7 +312,7 @@
                   </template>
                   <template v-slot:append>
                     <q-icon
-                      v-if="detectionFile"
+                      v-if="detectionFiles && detectionFiles.length"
                       name="close"
                       @click.stop.prevent="clearDetection"
                       class="cursor-pointer"
@@ -289,7 +326,7 @@
                   <div class="section-label">
                     <span>Sample Images</span>
                     <q-icon name="info" size="16px" color="grey-6">
-                      <q-tooltip>Click to use pre-loaded samples</q-tooltip>
+                      <q-tooltip>Click to (multi)select samples; click again to unselect</q-tooltip>
                     </q-icon>
                   </div>
                   <div class="samples-grid detection-samples">
@@ -297,19 +334,19 @@
                       v-for="(sample, index) in detectionSamples"
                       :key="index"
                       class="sample-card"
-                      :class="{ 'sample-active': selectedDetectionSample === index }"
-                      @click="selectDetectionSample(index)"
+                      :class="{ 'sample-active': selectedDetectionSamples.includes(index) }"
+                      @click="toggleDetectionSample(index)"
                     >
                       <q-img
                         :src="sample.thumbnail"
                         ratio="1"
                         class="sample-image"
                       >
-                        <div class="sample-overlay">
+                        <div class="sample-overlay" v-show="selectedDetectionSamples.includes(index)">
                           <q-icon name="check_circle" size="24px" color="white" />
                         </div>
                       </q-img>
-                      <div class="sample-label">{{ sample.name }}</div>
+                      <div class="sample-label">{{ sample.name || `Sample ${index+1}` }}</div>
                     </div>
                   </div>
                 </div>
@@ -321,11 +358,11 @@
                   size="lg"
                   class="action-btn"
                   :loading="isDetecting"
-                  :disable="!detectionImage"
+                  :disable="detectGallery.length === 0"
                   @click="detectObjects"
                 >
                   <q-icon name="radar" size="20px" class="q-mr-sm" />
-                  <span>Detect Objects</span>
+                  <span>Detect {{ detectGallery.length ? `(${detectGallery.length})` : 'Objects' }}</span>
                   <template v-slot:loading>
                     <q-spinner-dots size="20px" />
                     <span class="q-ml-sm">Processing...</span>
@@ -382,7 +419,7 @@
                     <q-icon name="visibility" color="primary" size="24px" />
                     <span>Detection Results</span>
                   </div>
-                  <div v-if="hasDetections" class="header-actions">
+                  <div v-if="currentDetections" class="header-actions">
                     <q-btn-toggle
                       v-model="viewMode"
                       toggle-color="primary"
@@ -393,23 +430,25 @@
                         { label: 'Original', value: 'original', icon: 'image' }
                       ]"
                     />
+                    <q-btn dense flat size="sm" icon="chevron_left" @click="prevDetection" :disable="currentDetectionIndex === 0" />
                     <q-btn flat dense round size="sm" icon="download" color="primary" @click="downloadResults">
                       <q-tooltip>Download Results</q-tooltip>
                     </q-btn>
+                    <q-btn dense flat size="sm" icon="chevron_right" @click="nextDetection" :disable="currentDetectionIndex >= detectGallery.length - 1" />
                   </div>
                 </div>
 
                 <!-- Image with Detections -->
-                <div v-if="detectionImage" class="detection-preview">
+                <div v-if="currentDetectionImageUrl" class="detection-preview">
                   <div class="image-wrapper">
                     <img
-                      :src="detectionImageUrl"
+                      :src="currentDetectionImageUrl"
                       alt="Detection result"
                       class="detection-image"
                       @load="onImageLoad"
                     />
                     <div
-                      v-for="(detection, index) in detections"
+                      v-for="(detection, index) in currentDetections"
                       :key="index"
                       v-show="viewMode === 'annotated'"
                       class="bounding-box"
@@ -439,7 +478,7 @@
                     <q-icon name="list" color="primary" size="24px" />
                     <span>Detected Objects</span>
                   </div>
-                  <q-badge color="primary" :label="`${detections.length} found`" />
+                  <q-badge color="primary" :label="`${currentDetections.length} found`" />
                 </div>
 
                 <div class="detections-content">
@@ -482,7 +521,7 @@
                   <div class="stat-compact">
                     <q-icon name="pets" size="24px" color="teal" />
                     <div>
-                      <div class="stat-compact-value">{{ detections.length }}</div>
+                      <div class="stat-compact-value">{{ currentDetections.length }}</div>
                       <div class="stat-compact-label">Objects Found</div>
                     </div>
                   </div>
@@ -494,6 +533,35 @@
                     </div>
                   </div>
                 </div>
+
+                <!-- Thumbnail strip -->
+                <div class="detections-content q-mt-md" v-if="detectGallery.length > 1">
+                  <div
+                    v-for="(item, idx) in detectGallery"
+                    :key="idx"
+                    class="detection-item"
+                    @click="goToDetection(idx)"
+                    :style="{ opacity: idx === currentDetectionIndex ? 1 : 0.8 }"
+                  >
+                    <div class="detection-number">{{ idx + 1 }}</div>
+                    <div class="detection-info">
+                      <div class="detection-name">Image {{ idx + 1 }}</div>
+                      <div class="detection-scientific">{{ (item.detections?.[0]?.species) || '—' }}</div>
+                      <q-linear-progress
+                        :value="item.detections?.[0]?.confidence || 0"
+                        :color="getConfidenceColor(item.detections?.[0]?.confidence || 0)"
+                        size="4px"
+                        rounded
+                        class="q-mt-xs"
+                      />
+                    </div>
+                    <div class="detection-confidence" v-if="item.detections?.length">
+                      <q-badge :color="getConfidenceColor(item.detections?.[0]?.confidence || 0)" :label="`${((item.detections?.[0]?.confidence || 0) * 100).toFixed(1)}%`" />
+                      <q-icon name="chevron_right" size="20px" color="grey-5" class="q-ml-xs" />
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
@@ -582,33 +650,28 @@ import sample4 from '../assets/sample4.jpg'
 window.Buffer = Buffer
 
 const $q = useQuasar()
-import { onMounted, onBeforeUnmount } from 'vue'
-
-// Gradio Clients
-//let classificationClient = null
-//let detectionClient = null
 
 // Active Task
 const activeTask = ref('classification')
 
-// TASK 1: CLASSIFICATION STATE
+// ENDPOINTS
 const CLASSIFY_URL = `${API_BASE}/classify`
-
-const classificationFile = ref(null)
-const classificationImage = ref(null)
-const classificationImageUrl = ref('')
-const selectedClassificationSample = ref(null)
-const isClassifying = ref(false)
-const classificationResults = ref([])
 const DETECT_URL = `${API_BASE}/detect`
 
-// TASK 2: DETECTION STATE
-const detectionFile = ref(null)
-const detectionImage = ref(null)
-const detectionImageUrl = ref('')
-const selectedDetectionSample = ref(null)
+// ===== MULTI-IMAGE STATE (Classification) =====
+const classificationFiles = ref(null)
+const selectedClassificationSamples = ref([])
+const classifyGallery = ref([]) // [{ url, name, source, results }]
+const currentClassificationIndex = ref(0)
+const isClassifying = ref(false)
+const classificationResults = ref([]) // results for current image
+
+// ===== MULTI-IMAGE STATE (Detection) =====
+const detectionFiles = ref(null)
+const selectedDetectionSamples = ref([])
+const detectGallery = ref([]) // [{ url, name, source, detections }]
+const currentDetectionIndex = ref(0)
 const isDetecting = ref(false)
-const detections = ref([])
 const viewMode = ref('annotated')
 const processingTime = ref(0)
 const imageWidth = ref(0)
@@ -674,7 +737,44 @@ const speciesInfo = {
     conservation: 'Least Concern'
   }
 }
+function normalizeSpeciesLabel(raw) {
+  if (!raw) return null
+  const s = String(raw).trim().toLowerCase()
+    .replace(/[_-]/g, ' ')
+    .replace(/\s+/g, ' ')
 
+  // alias map -> your canonical keys
+  const aliases = {
+    'eel': 'Eel',
+    'european eel': 'Eel',
+    'scallop': 'Scallop',
+    'scallops': 'Scallop',
+    'crab': 'Crab',
+    'crabs': 'Crab',
+    'flatfish': 'Flatfish',
+    'flat fish': 'Flatfish',
+    'roundfish': 'Roundfish',
+    'round fish': 'Roundfish',
+    'skate': 'Skate',
+    'common skate': 'Skate',
+    'whelk': 'Whelk',
+    'whelks': 'Whelk',
+  }
+
+  // exact alias hit
+  if (aliases[s]) return aliases[s]
+
+  // light fallback heuristics
+  if (s.includes('eel')) return 'Eel'
+  if (s.includes('scallop')) return 'Scallop'
+  if (s.includes('crab')) return 'Crab'
+  if (s.includes('flat')) return 'Flatfish'
+  if (s.includes('round')) return 'Roundfish'
+  if (s.includes('skate')) return 'Skate'
+  if (s.includes('whelk')) return 'Whelk'
+
+  return null
+}
 // Sample Images for Classification - Use imported images
 const classificationSamples = ref([
   {
@@ -711,107 +811,130 @@ const detectionSamples = ref([
   }
 ])
 
-// COMPUTED
-const hasDetections = computed(() => detections.value.length > 0)
+// ===== COMPUTED (Classification) =====
+const currentClassificationImageUrl = computed(() => {
+  if (!classifyGallery.value.length) return ''
+  return classifyGallery.value[currentClassificationIndex.value]?.url || ''
+})
+
+// For the right-panel "Predictions"
+const currentClassificationItem = computed(() => {
+  return classifyGallery.value[currentClassificationIndex.value] || null
+})
+
+// Keep classificationResults in sync with current image
+watchEffectSyncClassification()
+function watchEffectSyncClassification () {
+  // simple sync without importing watchEffect to keep footprint light:
+  // call this after any index/results update
+  const item = currentClassificationItem.value
+  classificationResults.value = Array.isArray(item?.results) ? item.results : []
+}
+
+// ===== COMPUTED (Detection) =====
+const currentDetections = computed(() => {
+  if (!detectGallery.value.length) return []
+  return detectGallery.value[currentDetectionIndex.value]?.detections || []
+})
+
+const currentDetectionImageUrl = computed(() => {
+  if (!detectGallery.value.length) return ''
+  return detectGallery.value[currentDetectionIndex.value]?.url || ''
+})
+
+const hasDetections = computed(() => (currentDetections.value?.length || 0) > 0)
 
 const sortedDetections = computed(() => {
-  return [...detections.value].sort((a, b) => b.confidence - a.confidence)
+  return [...currentDetections.value].sort((a, b) => b.confidence - a.confidence)
 })
 
 const avgConfidence = computed(() => {
-  if (detections.value.length === 0) return 0
-  const sum = detections.value.reduce((acc, d) => acc + d.confidence, 0)
-  return ((sum / detections.value.length) * 100).toFixed(1)
+  if (!currentDetections.value.length) return 0
+  const sum = currentDetections.value.reduce((acc, d) => acc + d.confidence, 0)
+  return ((sum / currentDetections.value.length) * 100).toFixed(1)
 })
 
-// GRADIO CLIENT INITIALIZATION
-
-
-// CLASSIFICATION METHODS
-function handleClassificationUpload(file) {
-  if (file) {
-    selectedClassificationSample.value = null
-    classificationImage.value = 'uploaded'
-    classificationImageUrl.value = URL.createObjectURL(file)
-    classificationResults.value = []
-  }
+// ===== CLASSIFICATION HELPERS =====
+function handleClassificationUpload(files) {
+  // Files can be FileList, Array<File>, or single File
+  const arr = normalizeToArray(files)
+  const entries = arr.map(f => ({
+    url: URL.createObjectURL(f),
+    name: f.name || 'uploaded_image.jpg',
+    source: 'uploaded',
+    file: f,
+    results: []
+  }))
+  classifyGallery.value = dedupeByUrl([...entries, ...samplesToEntries(selectedClassificationSamples.value, classificationSamples.value), ...keepExistingNonDuplicates(classifyGallery.value, entries)])
+  currentClassificationIndex.value = 0
+  watchEffectSyncClassification()
 }
 
 function clearClassification() {
-  classificationFile.value = null
-  classificationImage.value = null
-  classificationImageUrl.value = ''
+  classificationFiles.value = null
+  selectedClassificationSamples.value = []
+  classifyGallery.value = []
+  currentClassificationIndex.value = 0
   classificationResults.value = []
 }
 
-function selectClassificationSample(index) {
-  selectedClassificationSample.value = index
-  classificationFile.value = null
-  classificationImage.value = classificationSamples.value[index].url
-  classificationImageUrl.value = classificationSamples.value[index].url
-  classificationResults.value = []
+function toggleClassificationSample(index) {
+  const idx = selectedClassificationSamples.value.indexOf(index)
+  if (idx >= 0) selectedClassificationSamples.value.splice(idx, 1)
+  else selectedClassificationSamples.value.push(index)
+
+  // Rebuild gallery using selected samples + any uploaded files already in gallery
+  const uploads = classifyGallery.value.filter(e => e.source === 'uploaded')
+  const sampleEntries = samplesToEntries(selectedClassificationSamples.value, classificationSamples.value)
+  classifyGallery.value = dedupeByUrl([...uploads, ...sampleEntries])
+  currentClassificationIndex.value = 0
+  watchEffectSyncClassification()
+}
+
+function prevClassification() {
+  if (currentClassificationIndex.value > 0) {
+    currentClassificationIndex.value -= 1
+    watchEffectSyncClassification()
+  }
+}
+function nextClassification() {
+  if (currentClassificationIndex.value < classifyGallery.value.length - 1) {
+    currentClassificationIndex.value += 1
+    watchEffectSyncClassification()
+  }
+}
+function goToClassification(idx) {
+  if (idx >= 0 && idx < classifyGallery.value.length) {
+    currentClassificationIndex.value = idx
+    watchEffectSyncClassification()
+  }
 }
 
 async function classifyImage() {
+  if (!classifyGallery.value.length) return
   isClassifying.value = true
   classificationResults.value = []
 
   try {
-    // Prepare a File (uploaded or sample) just like you do for detection
-    let fileToUpload
+    // Build payload of base64 images in gallery order
+    const base64List = await Promise.all(
+      classifyGallery.value.map(async (item) => {
+        if (item.file instanceof File) {
+          return await fileToBase64Payload(item.file)
+        }
+        // sample URL -> fetch to Blob -> File
+        const response = await fetch(item.url)
+        if (!response.ok) throw new Error(`Failed to fetch sample: ${response.status}`)
+        const blob = await response.blob()
+        const file = new File([blob], (item.name || 'sample.jpg'), { type: blob.type || 'image/jpeg' })
+        return await fileToBase64Payload(file)
+      })
+    )
 
-    if (classificationFile.value) {
-      if (classificationFile.value instanceof File) {
-        fileToUpload = classificationFile.value
-      } else {
-        fileToUpload = new File(
-          [classificationFile.value],
-          classificationFile.value.name || 'uploaded_image.jpg',
-          { type: classificationFile.value.type || 'image/jpeg', lastModified: Date.now() }
-        )
-      }
-    } else if (classificationImage.value && classificationImageUrl.value) {
-      const response = await fetch(classificationImageUrl.value)
-      if (!response.ok) throw new Error(`Failed to fetch image: ${response.status}`)
-      const blob = await response.blob()
-
-      // try to preserve filename/mime
-      let fileName = 'sample_image.jpg'
-      let mimeType = blob.type || 'image/jpeg'
-      try {
-        const urlPath = new URL(classificationImageUrl.value).pathname
-        const urlFileName = urlPath.substring(urlPath.lastIndexOf('/') + 1)
-        if (urlFileName && urlFileName.includes('.')) fileName = urlFileName
-      } catch (error){
-        console.warn('Error parsing sample image URL:', error)
-      }
-      const ext = fileName.toLowerCase().split('.').pop()
-      switch (ext) {
-        case 'png': mimeType = 'image/png'; break
-        case 'jpg':
-        case 'jpeg': mimeType = 'image/jpeg'; break
-        case 'gif': mimeType = 'image/gif'; break
-        case 'webp': mimeType = 'image/webp'; break
-        default:
-          mimeType = 'image/jpeg'
-          fileName = fileName.replace(/\.[^/.]+$/, '') + '.jpg'
-      }
-
-      fileToUpload = new File([blob], fileName, { type: mimeType, lastModified: Date.now() })
-    } else {
-      throw new Error('No image selected')
-    }
-
-    if (!fileToUpload || fileToUpload.size === 0) throw new Error('Invalid or empty image file')
-
-    // Convert to base64 payload (no data: prefix)
-    const b64 = await fileToBase64Payload(fileToUpload)
-
-    // Call your FastAPI /classify
     const resp = await fetch(CLASSIFY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ images: [b64], top_k: 5 })
+      body: JSON.stringify({ images: base64List, top_k: 5 })
     })
     if (!resp.ok) {
       const text = await resp.text().catch(() => '')
@@ -819,24 +942,26 @@ async function classifyImage() {
     }
 
     const json = await resp.json()
-    // Expecting: { predictions: [ { task: 'classification', top_k: [{label, index, score}, ...] } ] }
-    const pred = Array.isArray(json?.predictions) ? json.predictions[0] : null
-    const topk = pred?.top_k || []
+    // Expecting: { predictions: [ { task:'classification', top_k:[...]} , ... per image ] }
+    const preds = Array.isArray(json?.predictions) ? json.predictions : []
 
-    classificationResults.value = topk
-      .map(it => ({
-        species: it.label || 'Unknown',
-        confidence: Number(it.score ?? 0)
-      }))
-      .sort((a, b) => b.confidence - a.confidence)
+    classifyGallery.value = classifyGallery.value.map((item, i) => {
+      const topk = preds[i]?.top_k || []
+      const mapped = topk
+        .map(it => ({
+          species: it.label || 'Unknown',
+          confidence: Number(it.score ?? 0)
+        }))
+        .sort((a, b) => b.confidence - a.confidence)
+      return { ...item, results: mapped }
+    })
 
-    if (classificationResults.value.length === 0) {
-      throw new Error('Empty classification results')
-    }
+    // Sync current results view
+    watchEffectSyncClassification()
 
     Notify.create({
       type: 'positive',
-      message: 'Classification complete!',
+      message: `Classification complete for ${classifyGallery.value.length} image(s)!`,
       position: 'top',
       timeout: 2000
     })
@@ -853,32 +978,47 @@ async function classifyImage() {
   }
 }
 
-
-// DETECTION METHODS
-function handleDetectionUpload(file) {
-  if (file) {
-    selectedDetectionSample.value = null
-    detectionImage.value = 'uploaded'
-    detectionImageUrl.value = URL.createObjectURL(file)
-    detections.value = []
-  }
+// ===== DETECTION HELPERS =====
+function handleDetectionUpload(files) {
+  const arr = normalizeToArray(files)
+  const entries = arr.map(f => ({
+    url: URL.createObjectURL(f),
+    name: f.name || 'uploaded_image.jpg',
+    source: 'uploaded',
+    file: f,
+    detections: []
+  }))
+  detectGallery.value = dedupeByUrl([...entries, ...samplesToEntries(selectedDetectionSamples.value, detectionSamples.value), ...keepExistingNonDuplicates(detectGallery.value, entries)])
+  currentDetectionIndex.value = 0
 }
 
 function clearDetection() {
-  detectionFile.value = null
-  detectionImage.value = null
-  detectionImageUrl.value = ''
-  detections.value = []
+  detectionFiles.value = null
+  selectedDetectionSamples.value = []
+  detectGallery.value = []
+  currentDetectionIndex.value = 0
 }
 
-function selectDetectionSample(index) {
-  selectedDetectionSample.value = index
-  detectionFile.value = null
-  detectionImage.value = detectionSamples.value[index].url  // Changed from .name to .url
-  detectionImageUrl.value = detectionSamples.value[index].url  // Added this line
-  detections.value = []
+function toggleDetectionSample(index) {
+  const idx = selectedDetectionSamples.value.indexOf(index)
+  if (idx >= 0) selectedDetectionSamples.value.splice(idx, 1)
+  else selectedDetectionSamples.value.push(index)
+
+  const uploads = detectGallery.value.filter(e => e.source === 'uploaded')
+  const sampleEntries = samplesToEntries(selectedDetectionSamples.value, detectionSamples.value)
+  detectGallery.value = dedupeByUrl([...uploads, ...sampleEntries])
+  currentDetectionIndex.value = 0
 }
 
+function prevDetection() {
+  if (currentDetectionIndex.value > 0) currentDetectionIndex.value -= 1
+}
+function nextDetection() {
+  if (currentDetectionIndex.value < detectGallery.value.length - 1) currentDetectionIndex.value += 1
+}
+function goToDetection(idx) {
+  if (idx >= 0 && idx < detectGallery.value.length) currentDetectionIndex.value = idx
+}
 
 function onImageLoad(event) {
   imageWidth.value = event.target.naturalWidth
@@ -887,70 +1027,28 @@ function onImageLoad(event) {
 }
 
 async function detectObjects() {
-  console.log('Starting detection (FastAPI)...')
-
+  if (!detectGallery.value.length) return
   isDetecting.value = true
-  detections.value = []
 
   try {
-    // -- Prepare a File from upload or sample (your existing logic) --
-    let fileToUpload
-
-    if (detectionFile.value) {
-      // uploaded file
-      if (detectionFile.value instanceof File) {
-        fileToUpload = detectionFile.value
-      } else {
-        fileToUpload = new File(
-          [detectionFile.value],
-          detectionFile.value.name || 'uploaded_image.jpg',
-          { type: detectionFile.value.type || 'image/jpeg', lastModified: Date.now() }
-        )
-      }
-    } else if (detectionImage.value && detectionImageUrl.value) {
-      // sample image
-      const response = await fetch(detectionImageUrl.value)
-      if (!response.ok) throw new Error(`Failed to fetch image: ${response.status}`)
-      const imageBlob = await response.blob()
-      let fileName = 'sample_image.jpg'
-      let mimeType = imageBlob.type || 'image/jpeg'
-
-      try {
-        const urlPath = new URL(detectionImageUrl.value).pathname
-        const urlFileName = urlPath.substring(urlPath.lastIndexOf('/') + 1)
-        if (urlFileName && urlFileName.includes('.')) fileName = urlFileName
-      } catch (error){
-        console.warn('Error parsing sample image URL:', error)
-      }
-
-      const ext = fileName.toLowerCase().split('.').pop()
-      switch (ext) {
-        case 'png': mimeType = 'image/png'; break
-        case 'jpg':
-        case 'jpeg': mimeType = 'image/jpeg'; break
-        case 'gif': mimeType = 'image/gif'; break
-        case 'webp': mimeType = 'image/webp'; break
-        default:
-          mimeType = 'image/jpeg'
-          fileName = fileName.replace(/\.[^/.]+$/, '') + '.jpg'
-      }
-      fileToUpload = new File([imageBlob], fileName, { type: mimeType, lastModified: Date.now() })
-    } else {
-      throw new Error('No image selected')
-    }
-
-    if (!fileToUpload || fileToUpload.size === 0) throw new Error('Invalid or empty image file')
-    if (!fileToUpload.type || !fileToUpload.type.startsWith('image/')) {
-      throw new Error('File must be an image (JPEG, PNG, etc.)')
-    }
-
-    // -- Convert to base64 payload for your FastAPI /detect --
     const startTime = Date.now()
-    const b64 = await fileToBase64Payload(fileToUpload)
+
+    const base64List = await Promise.all(
+      detectGallery.value.map(async (item) => {
+        if (item.file instanceof File) {
+          return await fileToBase64Payload(item.file)
+        }
+        const response = await fetch(item.url)
+        if (!response.ok) throw new Error(`Failed to fetch sample: ${response.status}`)
+        const blob = await response.blob()
+        const file = new File([blob], (item.name || 'sample.jpg'), { type: blob.type || 'image/jpeg' })
+        return await fileToBase64Payload(file)
+      })
+    )
 
     const body = {
-      images: [b64],
-      conf_threshold: 0.25,   // you can bind to a UI control if desired
+      images: base64List,
+      conf_threshold: 0.25,
       iou_threshold: 0.25
     }
 
@@ -965,45 +1063,50 @@ async function detectObjects() {
     }
 
     const json = await resp.json()
-    // Expecting: { predictions: [{ detections: [{ bbox_xyxy, label, score, ...}, ...] }] }
-    const prediction = Array.isArray(json?.predictions) ? json.predictions[0] : null
-    const apiDets = prediction?.detections || []
+    // Expecting: { predictions: [ { detections: [...]}, { detections: [...]}, ... ] }
+    const preds = Array.isArray(json?.predictions) ? json.predictions : []
 
-    // Ensure we have image dimensions for %-based overlay
-    // (onImageLoad already sets natural width/height)
-    if (!imageWidth.value || !imageHeight.value) {
-      // if the image element hasn't loaded yet, wait a tick
-      await new Promise(r => setTimeout(r, 0))
+    detectGallery.value = detectGallery.value.map((item, i) => {
+  const apiDets = preds[i]?.detections || []
+  const mapped = apiDets.map(d => {
+    const [x1, y1, x2, y2] = d.bbox_xyxy || [0, 0, 0, 0]
+    const bbox = {
+      x: Math.min(x1, x2),
+      y: Math.min(y1, y2),
+      width: Math.abs(x2 - x1),
+      height: Math.abs(y2 - y1)
+    }
+    const canonical = normalizeSpeciesLabel(d.label)
+    const label = d.label || 'Unknown'
+    const info = speciesInfo[canonical || ''] || {
+      scientificName: 'Unknown',
+      habitat: 'Unknown',
+      depthRange: 'Unknown',
+      conservation: 'Unknown'
     }
 
-    // Map API -> UI model
-    const mapped = apiDets.map(d => {
-      const [x1, y1, x2, y2] = d.bbox_xyxy || [0, 0, 0, 0]
-      const bbox = {
-        x: Math.min(x1, x2),
-        y: Math.min(y1, y2),
-        width: Math.abs(x2 - x1),
-        height: Math.abs(y2 - y1)
-      }
-      const species = d.label || 'Unknown'
-      return {
-        species,
-        confidence: Number(d.score ?? 0),
-        bbox,
-        scientificName: speciesInfo[species]?.scientificName || 'Unknown',
-        habitat: speciesInfo[species]?.habitat || 'Unknown',
-        depthRange: speciesInfo[species]?.depthRange || 'Unknown',
-        conservation: speciesInfo[species]?.conservation || 'Unknown'
-      }
-    })
+    return {
+      species: label,
+      confidence: Number(d.score ?? 0),
+      bbox,
+      scientificName: info.scientificName,
+      habitat: info.habitat,
+      depthRange: info.depthRange,
+      conservation: info.conservation
+    }
+  })
 
-    detections.value = mapped
+  return { ...item, detections: mapped }
+})
+
+
     processingTime.value = ((Date.now() - startTime) / 1000).toFixed(1)
 
-    if (detections.value.length > 0) {
+    const totalFound = detectGallery.value.reduce((acc, it) => acc + (it.detections?.length || 0), 0)
+    if (totalFound > 0) {
       $q.notify({
         type: 'positive',
-        message: `🎯 Found ${detections.value.length} object${detections.value.length === 1 ? '' : 's'}!`,
+        message: `🎯 Found ${totalFound} object${totalFound === 1 ? '' : 's'} across ${detectGallery.value.length} image(s)!`,
         position: 'top',
         timeout: 3000
       })
@@ -1028,7 +1131,7 @@ async function detectObjects() {
   }
 }
 
-
+// ===== SHARED METHODS =====
 async function fileToBase64Payload(file) {
   // returns the base64 *payload* (no data: prefix)
   return await new Promise((resolve, reject) => {
@@ -1044,7 +1147,7 @@ async function fileToBase64Payload(file) {
     r.readAsDataURL(file)
   })
 }
-// SHARED METHODS
+
 function getBoundingBoxStyle(detection) {
   if (viewMode.value === 'original') return { display: 'none' }
 
@@ -1084,11 +1187,12 @@ function showSpeciesInfo(detection) {
 }
 
 function downloadResults() {
+  const item = detectGallery.value[currentDetectionIndex.value]
   const results = {
     task: 'Object Detection',
-    image: detectionImage.value,
+    image: item?.name || `image_${currentDetectionIndex.value + 1}`,
     processingTime: processingTime.value,
-    detections: detections.value.map(d => ({
+    detections: (item?.detections || []).map(d => ({
       species: d.species,
       scientificName: d.scientificName,
       confidence: d.confidence,
@@ -1110,10 +1214,43 @@ function downloadResults() {
     position: 'top'
   })
 }
+
+// ===== small utilities =====
+function normalizeToArray(files) {
+  if (!files) return []
+  if (Array.isArray(files)) return files
+  if (files instanceof FileList) return Array.from(files)
+  return [files]
+}
+function samplesToEntries(indices, samplesArr) {
+  return indices.map(i => ({
+    url: samplesArr[i].url,
+    name: `sample_${i + 1}.jpg`,
+    source: 'sample',
+    results: [],
+    detections: []
+  }))
+}
+function dedupeByUrl(arr) {
+  const seen = new Set()
+  const out = []
+  for (const it of arr) {
+    if (seen.has(it.url)) continue
+    seen.add(it.url)
+    out.push(it)
+  }
+  return out
+}
+function keepExistingNonDuplicates(existing, incomingUploads) {
+  // Keep existing items that aren't replaced by incoming uploads with same url
+  const incomingUrls = new Set(incomingUploads.map(i => i.url))
+  return existing.filter(e => !incomingUrls.has(e.url))
+}
 </script>
 
 <style scoped lang="scss">
-// DESIGN SYSTEM
+/* (unchanged styles) */
+/* DESIGN SYSTEM */
 $primary: #1976D2;
 $secondary: #0D47A1;
 $accent: #00BCD4;
@@ -1125,7 +1262,7 @@ $gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 $gradient-ocean: linear-gradient(135deg, #0575E6 0%, #021B79 100%);
 $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
 
-// HERO SECTION
+/* HERO SECTION */
 .ai-demo-page {
   min-height: 100vh;
   background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
@@ -1191,7 +1328,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   font-weight: 300;
 }
 
-// STATS BAR
+/* STATS BAR */
 .stats-bar {
   display: flex;
   justify-content: center;
@@ -1236,14 +1373,14 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   }
 }
 
-// CONTENT CONTAINER
+/* CONTENT CONTAINER */
 .content-container {
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem 1.5rem;
 }
 
-// TASK SELECTOR
+/* TASK SELECTOR */
 .task-selector-wrapper {
   margin-bottom: 2rem;
   display: flex;
@@ -1287,7 +1424,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   opacity: 0.8;
 }
 
-// PANELS
+/* PANELS */
 .custom-panels {
   background: transparent;
 }
@@ -1296,7 +1433,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   padding: 0;
 }
 
-// TASK GRID
+/* TASK GRID */
 .task-grid {
   display: grid;
   grid-template-columns: 400px 1fr;
@@ -1314,7 +1451,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   gap: 1.5rem;
 }
 
-// GLASS CARD
+/* GLASS CARD */
 .glass-card {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
@@ -1352,7 +1489,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   gap: 0.5rem;
 }
 
-// FILE INPUT
+/* FILE INPUT */
 .modern-file-input {
   margin-bottom: 1.5rem;
   border-radius: 12px;
@@ -1365,7 +1502,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   }
 }
 
-// SAMPLES SECTION
+/* SAMPLES SECTION */
 .samples-section {
   margin-bottom: 1.5rem;
 }
@@ -1444,7 +1581,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   text-align: center;
 }
 
-// ACTION BUTTON
+/* ACTION BUTTON */
 .action-btn {
   width: 100%;
   height: 56px;
@@ -1462,7 +1599,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   }
 }
 
-// SPECIES REFERENCE
+/* SPECIES REFERENCE */
 .species-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1504,7 +1641,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   color: #333;
 }
 
-// MODEL INFO
+/* MODEL INFO */
 .metrics-grid {
   display: grid;
   gap: 1rem;
@@ -1554,7 +1691,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   font-weight: 500;
 }
 
-// IMAGE PREVIEW
+/* IMAGE PREVIEW */
 .image-preview {
   margin-bottom: 1.5rem;
   border-radius: 16px;
@@ -1576,7 +1713,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-// EMPTY STATE
+/* EMPTY STATE */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -1614,7 +1751,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   text-align: center;
 }
 
-// RESULTS CONTENT
+/* RESULTS CONTENT */
 .results-content {
   margin-top: 1.5rem;
 }
@@ -1632,7 +1769,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   color: #333;
 }
 
-// PREDICTIONS LIST
+/* PREDICTIONS LIST */
 .predictions-list {
   display: flex;
   flex-direction: column;
@@ -1687,7 +1824,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   margin-top: 0.5rem;
 }
 
-// DETECTION PREVIEW
+/* DETECTION PREVIEW */
 .detection-preview {
   margin-bottom: 1.5rem;
   border-radius: 16px;
@@ -1703,12 +1840,11 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
 .detection-image {
   width: 100%;
   height: auto;
-  max-height: 700px;  // Add a max-height constraint
+  max-height: 700px;
   display: block;
-      // Add this to ensure the image scales proportionally
 }
 
-
+/* Boxes */
 .bounding-box {
   position: absolute;
   border: 3px solid #00ff00;
@@ -1754,7 +1890,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   font-size: 0.75rem;
 }
 
-// DETECTIONS LIST
+/* DETECTIONS LIST */
 .detections-content {
   display: flex;
   flex-direction: column;
@@ -1841,7 +1977,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   flex-shrink: 0;
 }
 
-// STATS CARD
+/* STATS CARD */
 .stats-grid-compact {
   display: grid;
   gap: 1rem;
@@ -1870,7 +2006,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   margin-top: 0.25rem;
 }
 
-// SPECIES DIALOG
+/* SPECIES DIALOG */
 .species-dialog {
   min-width: 500px;
   border-radius: 20px;
@@ -1937,7 +2073,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   font-weight: 600;
 }
 
-// RESPONSIVE
+/* RESPONSIVE */
 @media (max-width: 768px) {
   .hero-section {
     padding: 3rem 1.5rem 2rem;
@@ -1964,7 +2100,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   }
 }
 
-// ANIMATIONS
+/* ANIMATIONS */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -1980,7 +2116,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   animation: fadeIn 0.5s ease-out;
 }
 
-// SMOOTH TRANSITIONS
+/* SMOOTH TRANSITIONS */
 * {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
