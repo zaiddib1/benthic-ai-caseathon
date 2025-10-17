@@ -94,7 +94,7 @@
           </q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple to="/data" class="drawer-item">
+        <q-item clickable v-ripple to="/dataset" class="drawer-item">
           <q-item-section avatar>
             <q-icon name="dataset" />
           </q-item-section>
