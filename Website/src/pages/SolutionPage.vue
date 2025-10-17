@@ -1078,7 +1078,7 @@ async function detectObjects() {
     }
     const canonical = normalizeSpeciesLabel(d.label)
     const label = d.label || 'Unknown'
-    const info = speciesInfo[canonical || ''] || {
+    const info = organismsInfo[canonical || ''] || {
       scientificName: 'Unknown',
       habitat: 'Unknown',
       depthRange: 'Unknown',
