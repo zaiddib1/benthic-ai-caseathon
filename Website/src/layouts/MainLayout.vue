@@ -25,6 +25,7 @@
           icon="science"
           aria-label="Research"
           class="q-ml-sm"
+          to="/dataset"
         />
       </q-toolbar>
     </q-header>

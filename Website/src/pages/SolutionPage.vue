@@ -574,6 +574,11 @@ import eelImage from '../assets/eel.jpg'
 import roundfishImage from '../assets/roundfish.jpg'
 import skateImage from '../assets/skate.jpg'
 
+import sample1 from '../assets/sample1.jpg'
+import sample2 from '../assets/sample2.jpg'
+import sample3 from '../assets/sample3.jpg'
+import sample4 from '../assets/sample4.jpg'
+
 window.Buffer = Buffer
 
 const $q = useQuasar()
@@ -688,24 +693,20 @@ const classificationSamples = ref([
 // Sample Images for Detection
 const detectionSamples = ref([
   {
-    name: 'Coral Reef',
-    thumbnail: '/samples/detect-coral.jpg',
-    url: '/samples/detect-coral-full.jpg'
+    thumbnail: sample1,
+    url: sample1
   },
   {
-    name: 'Rocky Bottom',
-    thumbnail: '/samples/detect-rocky.jpg',
-    url: '/samples/detect-rocky-full.jpg'
+    thumbnail: sample2,
+    url: sample2
   },
   {
-    name: 'Deep Sea',
-    thumbnail: '/samples/detect-deep.jpg',
-    url: '/samples/detect-deep-full.jpg'
+    thumbnail: sample3,
+    url: sample3
   },
   {
-    name: 'Sandy Floor',
-    thumbnail: '/samples/detect-sandy.jpg',
-    url: '/samples/detect-sandy-full.jpg'
+    thumbnail: sample4,
+    url: sample4
   }
 ])
 
@@ -872,10 +873,11 @@ function clearDetection() {
 function selectDetectionSample(index) {
   selectedDetectionSample.value = index
   detectionFile.value = null
-  detectionImage.value = detectionSamples.value[index].name
-  detectionImageUrl.value = detectionSamples.value[index].url
+  detectionImage.value = detectionSamples.value[index].url  // Changed from .name to .url
+  detectionImageUrl.value = detectionSamples.value[index].url  // Added this line
   detections.value = []
 }
+
 
 function onImageLoad(event) {
   imageWidth.value = event.target.naturalWidth
@@ -1700,8 +1702,11 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
 .detection-image {
   width: 100%;
   height: auto;
+  max-height: 600px;  // Add a max-height constraint
   display: block;
+  object-fit: contain;  // Add this to ensure the image scales proportionally
 }
+
 
 .bounding-box {
   position: absolute;
