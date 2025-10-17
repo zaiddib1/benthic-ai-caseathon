@@ -81,6 +81,7 @@ export default defineConfig((/* ctx */) => {
         rewrite: path => path.replace(/^\/api/, '')
       }
     },
+      allowedHosts: ['.trycloudflare.com'],
       open: true, // opens browser window automatically
     },
 
