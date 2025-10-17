@@ -222,7 +222,7 @@
           </div>
 
           <div class="options-container">
-            <h3 class="question-text">What organisms is this?</h3>
+            <h3 class="question-text">What organism is this?</h3>
             <div class="options-grid" :class="`options-${numOptionsForDifficulty}`">
               <q-btn
                 v-for="option in currentQuestion.options"
