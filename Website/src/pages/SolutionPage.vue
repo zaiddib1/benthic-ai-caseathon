@@ -347,8 +347,8 @@
                       <q-icon name="verified" size="28px" color="green" />
                     </div>
                     <div class="metric-content">
-                      <div class="metric-value">80%</div>
-                      <div class="metric-label">Avg Accuracy</div>
+                      <div class="metric-value">89%</div>
+                      <div class="metric-label">mAP (Mean Average Precision)</div>
                     </div>
                   </div>
                   <div class="metric-card">
@@ -582,6 +582,7 @@ import sample4 from '../assets/sample4.jpg'
 window.Buffer = Buffer
 
 const $q = useQuasar()
+import { onMounted, onBeforeUnmount } from 'vue'
 
 // Gradio Clients
 //let classificationClient = null
@@ -1702,9 +1703,9 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
 .detection-image {
   width: 100%;
   height: auto;
-  max-height: 600px;  // Add a max-height constraint
+  max-height: 700px;  // Add a max-height constraint
   display: block;
-  object-fit: contain;  // Add this to ensure the image scales proportionally
+      // Add this to ensure the image scales proportionally
 }
 
 
