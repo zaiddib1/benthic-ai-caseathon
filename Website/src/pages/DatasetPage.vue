@@ -564,10 +564,11 @@ const tab = ref<'cls' | 'det' | 'repro'>('cls')
 const viewerOpen = ref(false)
 const selectedIndex = ref(0)
 
-function openViewer(i: number) {
+function openViewer(i) {
   selectedIndex.value = i
   viewerOpen.value = true
 }
+
 
 const classes = [
   'Scallop', 'Roundfish', 'Crab', 'Whelk', 'Skate', 'Flatfish', 'Eel'
@@ -628,7 +629,7 @@ const detClassDist = [
   { id: 6, species: 'Whelk', train: 282, val: 68, test: 39, total: 389 }
 ]
 
-const id2label: Record<number, string> = {
+const id2label = {
   0: 'Crab',
   1: 'Eel',
   2: 'Flatfish',
@@ -637,6 +638,7 @@ const id2label: Record<number, string> = {
   5: 'Skate',
   6: 'Whelk'
 }
+
 
 const shareTips = [
   { icon: 'commit', title: 'Record Git commit', desc: 'Pin code and config to a commit hash for exact provenance.' },

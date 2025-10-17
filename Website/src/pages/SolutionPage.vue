@@ -557,9 +557,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useQuasar, Notify } from 'quasar'
-//import { Client, handle_file } from '@gradio/client'
 import { Buffer } from 'buffer'
 import { API_BASE } from 'src/boot/env'
 
@@ -781,7 +780,9 @@ async function classifyImage() {
         const urlPath = new URL(classificationImageUrl.value).pathname
         const urlFileName = urlPath.substring(urlPath.lastIndexOf('/') + 1)
         if (urlFileName && urlFileName.includes('.')) fileName = urlFileName
-      } catch {}
+      } catch (error){
+        console.warn('Error parsing sample image URL:', error)
+      }
       const ext = fileName.toLowerCase().split('.').pop()
       switch (ext) {
         case 'png': mimeType = 'image/png'; break
@@ -915,7 +916,9 @@ async function detectObjects() {
         const urlPath = new URL(detectionImageUrl.value).pathname
         const urlFileName = urlPath.substring(urlPath.lastIndexOf('/') + 1)
         if (urlFileName && urlFileName.includes('.')) fileName = urlFileName
-      } catch {}
+      } catch (error){
+        console.warn('Error parsing sample image URL:', error)
+      }
 
       const ext = fileName.toLowerCase().split('.').pop()
       switch (ext) {

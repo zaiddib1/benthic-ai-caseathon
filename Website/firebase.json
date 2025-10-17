@@ -4,12 +4,9 @@
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/ node_modules/**"
+      "**/node_modules/**"
     ],
     "rewrites": [
-      { "source": "/api/**", 
-      "run": { "serviceId": "fastapi-api", 
-      "region": "us-central1" } },
       {
         "source": "**",
         "destination": "/index.html"
