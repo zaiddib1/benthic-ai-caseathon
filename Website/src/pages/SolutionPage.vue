@@ -259,7 +259,7 @@
                       <div class="detection-number">{{ idx + 1 }}</div>
                       <div class="detection-info">
                         <div class="detection-name">Image {{ idx + 1 }}</div>
-                        <div class="detection-scientific">{{ classifyGallery[idx]?.results?.[0]?.species || '—' }}</div>
+                        <div class="detection-scientific">{{ classifyGallery[idx]?.results?.[0]?.organisms || '—' }}</div>
                         <q-linear-progress
                           :value="classifyGallery[idx]?.results?.[0]?.confidence || 0"
                           :color="getConfidenceColor(classifyGallery[idx]?.results?.[0]?.confidence || 0)"
@@ -546,7 +546,7 @@
                     <div class="detection-number">{{ idx + 1 }}</div>
                     <div class="detection-info">
                       <div class="detection-name">Image {{ idx + 1 }}</div>
-                      <div class="detection-scientific">{{ (item.detections?.[0]?.species) || '—' }}</div>
+                      <div class="detection-scientific">{{ (item.detections?.[0]?.organisms) || '—' }}</div>
                       <q-linear-progress
                         :value="item.detections?.[0]?.confidence || 0"
                         :color="getConfidenceColor(item.detections?.[0]?.confidence || 0)"
@@ -737,7 +737,7 @@ const organismsInfo = {
     conservation: 'Least Concern'
   }
 }
-function normalizeSpeciesLabel(raw) {
+function normalizeOrganismsLabel(raw) {
   if (!raw) return null
   const s = String(raw).trim().toLowerCase()
     .replace(/[_-]/g, ' ')
@@ -949,7 +949,7 @@ async function classifyImage() {
       const topk = preds[i]?.top_k || []
       const mapped = topk
         .map(it => ({
-          species: it.label || 'Unknown',
+          organisms: it.label || 'Unknown',
           confidence: Number(it.score ?? 0)
         }))
         .sort((a, b) => b.confidence - a.confidence)
@@ -1076,7 +1076,7 @@ async function detectObjects() {
       width: Math.abs(x2 - x1),
       height: Math.abs(y2 - y1)
     }
-    const canonical = normalizeSpeciesLabel(d.label)
+    const canonical = normalizeOrganismsLabel(d.label)
     const label = d.label || 'Unknown'
     const info = organismsInfo[canonical || ''] || {
       scientificName: 'Unknown',
@@ -1086,7 +1086,7 @@ async function detectObjects() {
     }
 
     return {
-      species: label,
+      organisms: label,
       confidence: Number(d.score ?? 0),
       bbox,
       scientificName: info.scientificName,
@@ -1193,7 +1193,7 @@ function downloadResults() {
     image: item?.name || `image_${currentDetectionIndex.value + 1}`,
     processingTime: processingTime.value,
     detections: (item?.detections || []).map(d => ({
-      species: d.species,
+      organisms: d.organisms,
       scientificName: d.scientificName,
       confidence: d.confidence,
       boundingBox: d.bbox
