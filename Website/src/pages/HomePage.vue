@@ -70,7 +70,7 @@
           </defs>
           <g class="wave-parallax">
             <use href="#wave" x="48" y="0" fill="rgba(255,255,255,0.7)" />
-            <path id="wave" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18v44h-352z" />
+            <use href="#wave" x="48" y="3" fill="rgba(255,255,255,0.5)" />
             <use href="#wave" x="48" y="5" fill="rgba(255,255,255,0.3)" />
             <use href="#wave" x="48" y="7" fill="#fff" />
           </g>
@@ -370,6 +370,7 @@
               label="Learn More"
               icon="info"
               class="cta-btn-secondary"
+              to="/about"
             />
           </div>
         </div>

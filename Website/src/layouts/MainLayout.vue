@@ -2,16 +2,6 @@
   <q-layout view="lHh Lpr lFf">
     <q-header elevated class="modern-header">
       <q-toolbar class="header-toolbar">
-        <q-btn
-          flat
-          dense
-          round
-          icon="menu"
-          aria-label="Menu"
-          @click="toggleLeftDrawer"
-          class="q-mr-sm"
-        />
-
         <q-toolbar-title class="brand-title">
           <div class="brand-wrapper">
             <div class="brand-icon">
@@ -21,7 +11,7 @@
           </div>
         </q-toolbar-title>
 
-        <q-tabs v-model="activeTab" class="gt-sm nav-tabs">
+        <q-tabs v-model="activeTab" class="nav-tabs">
           <q-route-tab name="home" to="/" label="Home" />
           <q-route-tab name="solution" to="/solution" label="Our Solution" />
           <q-route-tab name="game" to="/game" label="Species Game" />
@@ -38,72 +28,6 @@
         />
       </q-toolbar>
     </q-header>
-
-    <q-drawer
-      v-model="leftDrawerOpen"
-      show-if-above
-      bordered
-      class="modern-drawer"
-    >
-      <q-list>
-        <q-item-label header class="drawer-header">
-          Navigation
-        </q-item-label>
-
-        <q-item clickable v-ripple to="/" exact class="drawer-item">
-          <q-item-section avatar>
-            <q-icon name="home" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Home</q-item-label>
-          </q-item-section>
-        </q-item>
-
-        <q-item clickable v-ripple to="/solution" class="drawer-item">
-          <q-item-section avatar>
-            <q-icon name="psychology" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Our Solution</q-item-label>
-            <q-item-label caption>AI Computer Vision</q-item-label>
-          </q-item-section>
-        </q-item>
-
-        <q-item clickable v-ripple to="/game" class="drawer-item">
-          <q-item-section avatar>
-            <q-icon name="casino" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Species Game</q-item-label>
-            <q-item-label caption>Test Your Knowledge</q-item-label>
-          </q-item-section>
-        </q-item>
-
-        <q-separator class="q-my-md" />
-
-        <q-item-label header class="drawer-header">
-          Resources
-        </q-item-label>
-
-        <q-item clickable v-ripple to="/about" class="drawer-item">
-          <q-item-section avatar>
-            <q-icon name="info" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>About</q-item-label>
-          </q-item-section>
-        </q-item>
-
-        <q-item clickable v-ripple to="/data" class="drawer-item">
-          <q-item-section avatar>
-            <q-icon name="dataset" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Dataset Info</q-item-label>
-          </q-item-section>
-        </q-item>
-      </q-list>
-    </q-drawer>
 
     <q-page-container>
       <router-view />
@@ -131,12 +55,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
-const leftDrawerOpen = ref(false);
 const activeTab = ref('home');
-
-function toggleLeftDrawer() {
-  leftDrawerOpen.value = !leftDrawerOpen.value;
-}
 </script>
 
 <style scoped lang="scss">
@@ -199,36 +118,6 @@ function toggleLeftDrawer() {
     background: white;
     height: 3px;
     border-radius: 3px 3px 0 0;
-  }
-}
-
-// DRAWER
-.modern-drawer {
-  background: linear-gradient(180deg, #f5f7fa 0%, #ffffff 100%);
-}
-
-.drawer-header {
-  font-weight: 700;
-  color: #667eea;
-  padding: 1rem 1rem 0.5rem;
-}
-
-.drawer-item {
-  border-radius: 10px;
-  margin: 0.25rem 0.5rem;
-  transition: all 0.3s;
-  
-  &:hover {
-    background: rgba(102, 126, 234, 0.1);
-  }
-  
-  &.q-router-link--active {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
-    color: #667eea;
-    
-    :deep(.q-item__label) {
-      font-weight: 700;
-    }
   }
 }
 
