@@ -7,6 +7,7 @@ const routes = [
       { path: '/solution', component: () => import('pages/SolutionPage.vue') },
       { path: '/game', component: () => import('pages/GamePage.vue') },
       { path: '/about', component: () => import('pages/AboutPage.vue') },
+      { path: '/dataset', component: () => import('pages/DatasetPage.vue') }
     ]
   },  
 

@@ -559,8 +559,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar, Notify } from 'quasar'
-import { Client, handle_file } from '@gradio/client'
+//import { Client, handle_file } from '@gradio/client'
 import { Buffer } from 'buffer'
+import { API_BASE } from 'src/boot/env'
 
 // Initialize Quasar Notify
 Notify.setDefaults({
@@ -579,19 +580,22 @@ window.Buffer = Buffer
 const $q = useQuasar()
 
 // Gradio Clients
-let classificationClient = null
-let detectionClient = null
+//let classificationClient = null
+//let detectionClient = null
 
 // Active Task
 const activeTask = ref('classification')
 
 // TASK 1: CLASSIFICATION STATE
+const CLASSIFY_URL = `${API_BASE}/classify`
+
 const classificationFile = ref(null)
 const classificationImage = ref(null)
 const classificationImageUrl = ref('')
 const selectedClassificationSample = ref(null)
 const isClassifying = ref(false)
 const classificationResults = ref([])
+const DETECT_URL = `${API_BASE}/detect`
 
 // TASK 2: DETECTION STATE
 const detectionFile = ref(null)
@@ -720,39 +724,7 @@ const avgConfidence = computed(() => {
 })
 
 // GRADIO CLIENT INITIALIZATION
-async function initClassificationClient() {
-  try {
-    classificationClient = await Client.connect('dshi01/benthic_classification')
-    console.log('Successfully connected to Classification Space')
-  } catch (error) {
-    console.error('Failed to connect to Classification Space:', error)
-  }
-}
 
-async function initDetectionClient() {
-  try {
-    console.log('Connecting to detection client...')
-    
-    if (typeof Client !== 'function') {
-      throw new Error('Gradio Client not available - make sure @gradio/client is properly imported')
-    }
-    
-    detectionClient = await Client.connect('dshi01/benthic_obj_detect')
-    console.log('Successfully connected to Detection Space')
-    
-    return detectionClient
-  } catch (error) {
-    console.error('Failed to connect to Detection Space:', error)
-    detectionClient = null
-    throw error
-  }
-}
-
-// Initialize on component mount
-onMounted(() => {
-  initClassificationClient()
-  initDetectionClient()
-})
 
 // CLASSIFICATION METHODS
 function handleClassificationUpload(file) {
@@ -780,68 +752,86 @@ function selectClassificationSample(index) {
 }
 
 async function classifyImage() {
-  if (!classificationClient) {
-    await initClassificationClient()
-    if (!classificationClient) {
-      $q.notify({
-        type: 'negative',
-        message: 'Unable to connect to classification model',
-        position: 'top'
-      })
-      return
-    }
-  }
-
   isClassifying.value = true
   classificationResults.value = []
 
   try {
-    let imageBlob
+    // Prepare a File (uploaded or sample) just like you do for detection
+    let fileToUpload
+
     if (classificationFile.value) {
-      imageBlob = classificationFile.value
-    } else if (classificationImage.value) {
+      if (classificationFile.value instanceof File) {
+        fileToUpload = classificationFile.value
+      } else {
+        fileToUpload = new File(
+          [classificationFile.value],
+          classificationFile.value.name || 'uploaded_image.jpg',
+          { type: classificationFile.value.type || 'image/jpeg', lastModified: Date.now() }
+        )
+      }
+    } else if (classificationImage.value && classificationImageUrl.value) {
       const response = await fetch(classificationImageUrl.value)
-      imageBlob = await response.blob()
+      if (!response.ok) throw new Error(`Failed to fetch image: ${response.status}`)
+      const blob = await response.blob()
+
+      // try to preserve filename/mime
+      let fileName = 'sample_image.jpg'
+      let mimeType = blob.type || 'image/jpeg'
+      try {
+        const urlPath = new URL(classificationImageUrl.value).pathname
+        const urlFileName = urlPath.substring(urlPath.lastIndexOf('/') + 1)
+        if (urlFileName && urlFileName.includes('.')) fileName = urlFileName
+      } catch {}
+      const ext = fileName.toLowerCase().split('.').pop()
+      switch (ext) {
+        case 'png': mimeType = 'image/png'; break
+        case 'jpg':
+        case 'jpeg': mimeType = 'image/jpeg'; break
+        case 'gif': mimeType = 'image/gif'; break
+        case 'webp': mimeType = 'image/webp'; break
+        default:
+          mimeType = 'image/jpeg'
+          fileName = fileName.replace(/\.[^/.]+$/, '') + '.jpg'
+      }
+
+      fileToUpload = new File([blob], fileName, { type: mimeType, lastModified: Date.now() })
     } else {
       throw new Error('No image selected')
     }
 
-    const result = await detectionClient.predict('/predict', [
-      [handle_file(fileToUpload)], // Array of files (matching gr.Files input)
-      0.25, // conf threshold
-      0.25  // iou threshold
-    ])
+    if (!fileToUpload || fileToUpload.size === 0) throw new Error('Invalid or empty image file')
 
-    console.log('Classification API Result:', result.data)
+    // Convert to base64 payload (no data: prefix)
+    const b64 = await fileToBase64Payload(fileToUpload)
 
-    const predictions = result.data
-    if (Array.isArray(predictions) && predictions.length > 0) {
-      const prediction = predictions[0]
-      
-      if (prediction.confidences && Array.isArray(prediction.confidences)) {
-        const firstConfidence = prediction.confidences[0]
-        
-        if (typeof firstConfidence === 'object' && firstConfidence !== null) {
-          classificationResults.value = prediction.confidences
-            .map(item => ({
-              species: item.label || item.class || 'Unknown',
-              confidence: Number(item.confidence || item.score || 0)
-            }))
-            .sort((a, b) => b.confidence - a.confidence)
-        } else {
-          classificationResults.value = speciesCategories.map((species, index) => ({
-            species: species,
-            confidence: Number(prediction.confidences[index]) || 0
-          })).sort((a, b) => b.confidence - a.confidence)
-        }
-      }
+    // Call your FastAPI /classify
+    const resp = await fetch(CLASSIFY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ images: [b64], top_k: 5 })
+    })
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => '')
+      throw new Error(`HTTP ${resp.status} ${resp.statusText} – ${text}`)
     }
+
+    const json = await resp.json()
+    // Expecting: { predictions: [ { task: 'classification', top_k: [{label, index, score}, ...] } ] }
+    const pred = Array.isArray(json?.predictions) ? json.predictions[0] : null
+    const topk = pred?.top_k || []
+
+    classificationResults.value = topk
+      .map(it => ({
+        species: it.label || 'Unknown',
+        confidence: Number(it.score ?? 0)
+      }))
+      .sort((a, b) => b.confidence - a.confidence)
 
     if (classificationResults.value.length === 0) {
-      throw new Error('Unable to parse classification results')
+      throw new Error('Empty classification results')
     }
 
-    $q.notify({
+    Notify.create({
       type: 'positive',
       message: 'Classification complete!',
       position: 'top',
@@ -849,7 +839,7 @@ async function classifyImage() {
     })
   } catch (error) {
     console.error('Classification error:', error)
-    $q.notify({
+    Notify.create({
       type: 'negative',
       message: `Classification failed: ${error.message}`,
       position: 'top',
@@ -859,6 +849,7 @@ async function classifyImage() {
     isClassifying.value = false
   }
 }
+
 
 // DETECTION METHODS
 function handleDetectionUpload(file) {
@@ -892,214 +883,134 @@ function onImageLoad(event) {
 }
 
 async function detectObjects() {
-  console.log('Starting detection...')
-  
-  if (!detectionClient) {
-    console.log('No detection client, initializing...')
-    await initDetectionClient()
-    if (!detectionClient) {
-      $q.notify({
-        type: 'negative',
-        message: 'Unable to connect to detection model',
-        position: 'top'
-      })
-      return
-    }
-  }
+  console.log('Starting detection (FastAPI)...')
 
   isDetecting.value = true
   detections.value = []
 
   try {
-    // Your existing file preparation code (which works fine)
+    // -- Prepare a File from upload or sample (your existing logic) --
     let fileToUpload
-    
+
     if (detectionFile.value) {
-      console.log('Using uploaded file:', detectionFile.value.name, detectionFile.value.size, 'bytes')
-      
+      // uploaded file
       if (detectionFile.value instanceof File) {
         fileToUpload = detectionFile.value
       } else {
-        fileToUpload = new File([detectionFile.value], detectionFile.value.name || 'uploaded_image.jpg', {
-          type: detectionFile.value.type || 'image/jpeg',
-          lastModified: Date.now()
-        })
+        fileToUpload = new File(
+          [detectionFile.value],
+          detectionFile.value.name || 'uploaded_image.jpg',
+          { type: detectionFile.value.type || 'image/jpeg', lastModified: Date.now() }
+        )
       }
     } else if (detectionImage.value && detectionImageUrl.value) {
-      console.log('Using sample image:', detectionImageUrl.value)
-      
+      // sample image
       const response = await fetch(detectionImageUrl.value)
-      if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.status}`)
-      }
-      
+      if (!response.ok) throw new Error(`Failed to fetch image: ${response.status}`)
       const imageBlob = await response.blob()
       let fileName = 'sample_image.jpg'
       let mimeType = imageBlob.type || 'image/jpeg'
-      
+
       try {
         const urlPath = new URL(detectionImageUrl.value).pathname
         const urlFileName = urlPath.substring(urlPath.lastIndexOf('/') + 1)
-        if (urlFileName && urlFileName.includes('.')) {
-          fileName = urlFileName
-        }
-      } catch (e) {}
-      
-      const extension = fileName.toLowerCase().split('.').pop()
-      switch (extension) {
+        if (urlFileName && urlFileName.includes('.')) fileName = urlFileName
+      } catch {}
+
+      const ext = fileName.toLowerCase().split('.').pop()
+      switch (ext) {
         case 'png': mimeType = 'image/png'; break
-        case 'jpg': case 'jpeg': mimeType = 'image/jpeg'; break
+        case 'jpg':
+        case 'jpeg': mimeType = 'image/jpeg'; break
         case 'gif': mimeType = 'image/gif'; break
         case 'webp': mimeType = 'image/webp'; break
-        default: mimeType = 'image/jpeg'; fileName = fileName.replace(/\.[^/.]+$/, '') + '.jpg'
+        default:
+          mimeType = 'image/jpeg'
+          fileName = fileName.replace(/\.[^/.]+$/, '') + '.jpg'
       }
-      
-      fileToUpload = new File([imageBlob], fileName, {
-        type: mimeType,
-        lastModified: Date.now()
-      })
+      fileToUpload = new File([imageBlob], fileName, { type: mimeType, lastModified: Date.now() })
     } else {
       throw new Error('No image selected')
     }
 
-    if (!fileToUpload || fileToUpload.size === 0) {
-      throw new Error('Invalid or empty image file')
-    }
-
+    if (!fileToUpload || fileToUpload.size === 0) throw new Error('Invalid or empty image file')
     if (!fileToUpload.type || !fileToUpload.type.startsWith('image/')) {
       throw new Error('File must be an image (JPEG, PNG, etc.)')
     }
 
-    console.log('File object prepared:', {
-      name: fileToUpload.name,
-      size: fileToUpload.size,
-      type: fileToUpload.type,
-      lastModified: fileToUpload.lastModified
-    })
-
+    // -- Convert to base64 payload for your FastAPI /detect --
     const startTime = Date.now()
+    const b64 = await fileToBase64Payload(fileToUpload)
 
-    // FIXED: Use submit/result pattern to avoid race conditions
-    console.log('Submitting detection job (async)...')
-    const job = detectionClient.submit('/predict', [
-      [handle_file(fileToUpload)], // Array of files (gr.Files expects an array)
-      0.25, // conf threshold 
-      0.25  // iou threshold
-    ])
-
-    console.log('Job submitted, waiting for completion...')
-    console.log('Job status:', job.status ? job.status() : 'status unavailable')
-
-    // Wait for the job to actually complete
-    const result = await job.result()
-    
-    processingTime.value = ((Date.now() - startTime) / 1000).toFixed(1)
-    console.log('Detection completed after', processingTime.value, 'seconds')
-    console.log('Detection API Result:', result)
-
-    // Parse the results (same as before)
-    const [galleryData, tableRows, csvFile] = result.data
-    
-    console.log('=== API RESPONSE BREAKDOWN ===')
-    console.log('Gallery (annotated images):', galleryData)
-    console.log('Table rows (detection data):', tableRows) 
-    console.log('CSV file:', csvFile)
-
-    // Process results from tableRows
-    if (tableRows && Array.isArray(tableRows) && tableRows.length > 0) {
-      console.log('SUCCESS: Found detection data in table rows!')
-      
-      const parsedDetections = []
-      
-      tableRows.forEach((row, index) => {
-        console.log(`Processing table row ${index}:`, row)
-        
-        if (row.length >= 5) {
-          const [filename, numDetections, labelsWithConf, boxes, rawBoxes] = row
-          
-          console.log({filename, numDetections, labelsWithConf, boxes, rawBoxes})
-          
-          if (numDetections > 0 && labelsWithConf && boxes) {
-            const labelConfPairs = labelsWithConf.split(',').map(s => s.trim())
-            const boxGroups = boxes.split('], [').map(s => 
-              s.replace(/[\[\]]/g, '').split(',').map(coord => parseFloat(coord.trim()))
-            )
-            
-            labelConfPairs.forEach((labelConf, i) => {
-              const parts = labelConf.split(':')
-              if (parts.length === 2) {
-                const species = parts[0].trim()
-                const confidence = parseFloat(parts[1].trim())
-                
-                let bbox = { x: 0, y: 0, width: 100, height: 100 }
-                if (boxGroups[i] && boxGroups[i].length >= 4) {
-                  const [x1, y1, x2, y2] = boxGroups[i]
-                  bbox = {
-                    x: Math.min(x1, x2),
-                    y: Math.min(y1, y2),
-                    width: Math.abs(x2 - x1), 
-                    height: Math.abs(y2 - y1)
-                  }
-                }
-                
-                parsedDetections.push({
-                  species: species,
-                  confidence: confidence,
-                  bbox: bbox,
-                  scientificName: speciesInfo[species]?.scientificName || 'Unknown',
-                  habitat: speciesInfo[species]?.habitat || 'Unknown',
-                  depthRange: speciesInfo[species]?.depthRange || 'Unknown', 
-                  conservation: speciesInfo[species]?.conservation || 'Unknown'
-                })
-              }
-            })
-          }
-        }
-      })
-      
-      detections.value = parsedDetections
-      console.log('Successfully parsed detections:', detections.value)
-
-      if (detections.value.length > 0) {
-        $q.notify({
-          type: 'positive',
-          message: `🎯 Found ${detections.value.length} marine ${detections.value.length === 1 ? 'creature' : 'creatures'}!`,
-          position: 'top',
-          timeout: 3000
-        })
-      } else {
-        $q.notify({
-          type: 'info',
-          message: 'Image processed successfully, but no marine life detected.',
-          position: 'top',
-          timeout: 3000
-        })
-      }
-    } else {
-      console.log('No detection data found in table rows')
-      
-      // Check CSV as fallback
-      if (csvFile && csvFile.url) {
-        console.log('Checking CSV file for detection data...')
-        try {
-          const csvResponse = await fetch(csvFile.url)
-          const csvText = await csvResponse.text()
-          console.log('CSV file contents:', csvText)
-        } catch (csvError) {
-          console.error('Could not fetch CSV:', csvError)
-        }
-      }
-      
-      $q.notify({
-        type: 'info',
-        message: 'Image processed but no detections found. Try adjusting confidence threshold.',
-        position: 'top',
-        timeout: 4000
-      })
+    const body = {
+      images: [b64],
+      conf_threshold: 0.25,   // you can bind to a UI control if desired
+      iou_threshold: 0.25
     }
 
+    const resp = await fetch(DETECT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => '')
+      throw new Error(`HTTP ${resp.status} ${resp.statusText} – ${text}`)
+    }
+
+    const json = await resp.json()
+    // Expecting: { predictions: [{ detections: [{ bbox_xyxy, label, score, ...}, ...] }] }
+    const prediction = Array.isArray(json?.predictions) ? json.predictions[0] : null
+    const apiDets = prediction?.detections || []
+
+    // Ensure we have image dimensions for %-based overlay
+    // (onImageLoad already sets natural width/height)
+    if (!imageWidth.value || !imageHeight.value) {
+      // if the image element hasn't loaded yet, wait a tick
+      await new Promise(r => setTimeout(r, 0))
+    }
+
+    // Map API -> UI model
+    const mapped = apiDets.map(d => {
+      const [x1, y1, x2, y2] = d.bbox_xyxy || [0, 0, 0, 0]
+      const bbox = {
+        x: Math.min(x1, x2),
+        y: Math.min(y1, y2),
+        width: Math.abs(x2 - x1),
+        height: Math.abs(y2 - y1)
+      }
+      const species = d.label || 'Unknown'
+      return {
+        species,
+        confidence: Number(d.score ?? 0),
+        bbox,
+        scientificName: speciesInfo[species]?.scientificName || 'Unknown',
+        habitat: speciesInfo[species]?.habitat || 'Unknown',
+        depthRange: speciesInfo[species]?.depthRange || 'Unknown',
+        conservation: speciesInfo[species]?.conservation || 'Unknown'
+      }
+    })
+
+    detections.value = mapped
+    processingTime.value = ((Date.now() - startTime) / 1000).toFixed(1)
+
+    if (detections.value.length > 0) {
+      $q.notify({
+        type: 'positive',
+        message: `🎯 Found ${detections.value.length} object${detections.value.length === 1 ? '' : 's'}!`,
+        position: 'top',
+        timeout: 3000
+      })
+    } else {
+      $q.notify({
+        type: 'info',
+        message: 'Processed successfully, but no detections found. Try lowering the confidence threshold.',
+        position: 'top',
+        timeout: 3000
+      })
+    }
   } catch (error) {
-    console.error('Detection process failed:', error)
+    console.error('Detection (API) failed:', error)
     $q.notify({
       type: 'negative',
       message: `Detection failed: ${error.message}`,
@@ -1112,7 +1023,21 @@ async function detectObjects() {
 }
 
 
-
+async function fileToBase64Payload(file) {
+  // returns the base64 *payload* (no data: prefix)
+  return await new Promise((resolve, reject) => {
+    const r = new FileReader()
+    r.onload = () => {
+      const res = r.result
+      if (typeof res !== 'string') return reject(new Error('not a data URL'))
+      const parts = res.split(',', 2)
+      if (parts.length < 2) return reject(new Error('bad data URL'))
+      resolve(parts[1])  // pure base64
+    }
+    r.onerror = () => reject(r.error ?? new Error('FileReader error'))
+    r.readAsDataURL(file)
+  })
+}
 // SHARED METHODS
 function getBoundingBoxStyle(detection) {
   if (viewMode.value === 'original') return { display: 'none' }
