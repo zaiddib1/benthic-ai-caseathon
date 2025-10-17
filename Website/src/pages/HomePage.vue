@@ -18,7 +18,7 @@
               Exploring the Ocean Floor<br/>with Artificial Intelligence
             </h1>
             <p class="hero-subtitle">
-              Advanced computer vision for benthic organisms identification and marine biodiversity monitoring
+              Advanced computer vision for benthic organism identification and marine biodiversity monitoring
             </p>
             
             <!-- Stats Pills -->
@@ -350,7 +350,7 @@
             Ready to Explore Marine Biodiversity?
           </h2>
           <p class="cta-description">
-            Discover how our AI solution can revolutionize underwater organisms monitoring and contribute to marine conservation efforts
+            Discover how our AI solution can revolutionize marine life monitoring and contribute to conservation efforts
           </p>
           <div class="cta-buttons">
             <q-btn
