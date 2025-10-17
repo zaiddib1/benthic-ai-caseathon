@@ -14,11 +14,11 @@
               <span>Dataset & Reproducibility</span>
             </div>
             <h1 class="hero-title">
-              BenthicAI Datasets
+              DeepFin Datasets
             </h1>
             <p class="hero-subtitle">
               Everything you need to train, evaluate, and reproduce results for
-              <strong>Image Classification</strong> and <strong>Object Detection</strong> on underwater benthic species.
+              <strong>Image Classification</strong> and <strong>Object Detection</strong> on underwater benthic organisms.
             </p>
 
             <div class="hero-stats">
@@ -32,7 +32,7 @@
               </div>
               <div class="stat-pill">
                 <q-icon name="pets" size="20px" />
-                <span>7 Species</span>
+                <span>7 Organisms</span>
               </div>
             </div>
           </div>
@@ -66,14 +66,14 @@
             </div>
             <div>
               <h2 class="card-title">Overview</h2>
-              <div class="card-subtitle">Comprehensive benthic species datasets</div>
+              <div class="card-subtitle">Comprehensive benthic organisms datasets</div>
             </div>
           </div>
 
           <div class="card-content">
             <p class="overview-text">
               The primary task is <strong>Image Classification</strong>: develop robust models using a
-              comprehensive dataset of <strong>10,500</strong> images to identify 7 benthic species
+              comprehensive dataset of <strong>10,500</strong> images to identify 7 benthic organisms
               (Scallop, Roundfish, Crab, Whelk, Skate, Flatfish, Eel) from single-organism underwater images.
             </p>
             <p class="overview-text">
@@ -83,7 +83,7 @@
             </p>
             <p class="overview-text muted">
               These AI models can accelerate benthic biodiversity assessments, support marine ecosystem monitoring,
-              enable efficient analysis of large-scale underwater surveys, and provide insights into species
+              enable efficient analysis of large-scale underwater surveys, and provide insights into organisms
               distribution patterns, population dynamics, and habitat characteristics across temporal and spatial scales.
             </p>
           </div>
@@ -162,19 +162,19 @@
                   <q-markup-table flat bordered square class="stats-table">
                     <thead>
                       <tr>
-                        <th>Species</th>
+                        <th>Organisms</th>
                         <th class="text-right">Images</th>
                         <th>Source Years</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="row in clsTable" :key="row.species">
-                        <td class="species-cell">{{ row.species }}</td>
+                      <tr v-for="row in clsTable" :key="row.organisms">
+                        <td class="organisms-cell">{{ row.organisms }}</td>
                         <td class="text-right number-cell">{{ row.images.toLocaleString() }}</td>
                         <td class="year-cell">{{ row.years }}</td>
                       </tr>
                       <tr class="total-row">
-                        <td class="species-cell">Total</td>
+                        <td class="organisms-cell">Total</td>
                         <td class="text-right number-cell">{{ (10500).toLocaleString() }}</td>
                         <td></td>
                       </tr>
@@ -393,13 +393,13 @@ test: test/images</code></pre>
                       </thead>
                       <tbody>
                         <tr v-for="row in detSplits" :key="row.split">
-                          <td class="species-cell">{{ row.split }}</td>
+                          <td class="organisms-cell">{{ row.split }}</td>
                           <td class="text-right number-cell">{{ row.images.toLocaleString() }}</td>
                           <td class="text-right number-cell">{{ row.objects.toLocaleString() }}</td>
                           <td class="text-right number-cell">{{ row.avg.toFixed(2) }}</td>
                         </tr>
                         <tr class="total-row">
-                          <td class="species-cell">Total</td>
+                          <td class="organisms-cell">Total</td>
                           <td class="text-right number-cell">2,759</td>
                           <td class="text-right number-cell">2,932</td>
                           <td class="text-right number-cell">1.06</td>
@@ -417,7 +417,7 @@ test: test/images</code></pre>
                       <thead>
                         <tr>
                           <th>ID</th>
-                          <th>Species</th>
+                          <th>Organisms</th>
                           <th class="text-right">Train</th>
                           <th class="text-right">Val</th>
                           <th class="text-right">Test</th>
@@ -427,7 +427,7 @@ test: test/images</code></pre>
                       <tbody>
                         <tr v-for="row in detClassDist" :key="row.id">
                           <td class="id-cell">{{ row.id }}</td>
-                          <td class="species-cell">{{ row.species }}</td>
+                          <td class="organisms-cell">{{ row.organisms }}</td>
                           <td class="text-right number-cell small">{{ row.train }}</td>
                           <td class="text-right number-cell small">{{ row.val }}</td>
                           <td class="text-right number-cell small">{{ row.test }}</td>
@@ -481,8 +481,8 @@ yolo task=detect mode=predict model=best.pt source=path/to/images/ conf=0.25 iou
                   </div>
                   <div class="code-block">
 <pre><code># Conda (CPU)
-conda create -n benthicai python=3.10 -y
-conda activate benthicai
+conda create -n DeepFin python=3.10 -y
+conda activate DeepFin
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 pip install ultralytics transformers timm pillow scikit-learn numpy pandas pyyaml
 
@@ -520,7 +520,7 @@ os.environ["PYTHONHASHSEED"] = str(seed)</code></pre>
                       </q-item-section>
                       <q-item-section>
                         <q-item-label class="feature-item-title">Classification Dataset</q-item-label>
-                        <q-item-label caption class="feature-item-desc">Use stratified splits by species (e.g., 70/15/15). Maintain year balance if temporal leakage is a concern (2015 vs 2022).</q-item-label>
+                        <q-item-label caption class="feature-item-desc">Use stratified splits by organisms (e.g., 70/15/15). Maintain year balance if temporal leakage is a concern (2015 vs 2022).</q-item-label>
                       </q-item-section>
                     </q-item>
                     <q-item class="feature-item">
@@ -625,7 +625,7 @@ os.environ["PYTHONHASHSEED"] = str(seed)</code></pre>
                 type="a"
               >
                 <q-badge color="white" text-color="primary" floating>10,500</q-badge>
-                <q-tooltip>10,500 images with 7 species labels</q-tooltip>
+                <q-tooltip>10,500 images with 7 organisms labels</q-tooltip>
               </q-btn>
               
               <!-- Detection Dataset -->
@@ -740,13 +740,13 @@ const classes = [
 ]
 
 const clsTable = [
-  { species: 'Scallop', images: 1500, years: '2015, 2022' },
-  { species: 'Roundfish', images: 1500, years: '2015, 2022' },
-  { species: 'Crab', images: 1500, years: '2015, 2022' },
-  { species: 'Whelk', images: 1500, years: '2015, 2022' },
-  { species: 'Skate', images: 1500, years: '2015, 2022' },
-  { species: 'Flatfish', images: 1500, years: '2015, 2022' },
-  { species: 'Eel', images: 1500, years: '2015, 2022' }
+  { organisms: 'Scallop', images: 1500, years: '2015, 2022' },
+  { organisms: 'Roundfish', images: 1500, years: '2015, 2022' },
+  { organisms: 'Crab', images: 1500, years: '2015, 2022' },
+  { organisms: 'Whelk', images: 1500, years: '2015, 2022' },
+  { organisms: 'Skate', images: 1500, years: '2015, 2022' },
+  { organisms: 'Flatfish', images: 1500, years: '2015, 2022' },
+  { organisms: 'Eel', images: 1500, years: '2015, 2022' }
 ]
 
 const clsPreproc = [
@@ -773,13 +773,13 @@ const detSplits = [
 ]
 
 const detClassDist = [
-  { id: 0, species: 'Crab', train: 291, val: 89, test: 45, total: 425 },
-  { id: 1, species: 'Eel', train: 275, val: 89, test: 43, total: 407 },
-  { id: 2, species: 'Flatfish', train: 209, val: 62, test: 26, total: 297 },
-  { id: 3, species: 'Roundfish', train: 287, val: 82, test: 38, total: 407 },
-  { id: 4, species: 'Scallop', train: 419, val: 109, test: 69, total: 597 },
-  { id: 5, species: 'Skate', train: 295, val: 76, test: 39, total: 410 },
-  { id: 6, species: 'Whelk', train: 282, val: 68, test: 39, total: 389 }
+  { id: 0, organisms: 'Crab', train: 291, val: 89, test: 45, total: 425 },
+  { id: 1, organisms: 'Eel', train: 275, val: 89, test: 43, total: 407 },
+  { id: 2, organisms: 'Flatfish', train: 209, val: 62, test: 26, total: 297 },
+  { id: 3, organisms: 'Roundfish', train: 287, val: 82, test: 38, total: 407 },
+  { id: 4, organisms: 'Scallop', train: 419, val: 109, test: 69, total: 597 },
+  { id: 5, organisms: 'Skate', train: 295, val: 76, test: 39, total: 410 },
+  { id: 6, organisms: 'Whelk', train: 282, val: 68, test: 39, total: 389 }
 ]
 
 const shareTips = [
@@ -1191,7 +1191,7 @@ $gradient-ocean: linear-gradient(135deg, #0575E6 0%, #021B79 100%);
   }
 }
 
-.species-cell {
+.organisms-cell {
   font-weight: 600;
   color: #1a1a1a;
 }

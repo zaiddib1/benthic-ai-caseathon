@@ -8,9 +8,9 @@
             <q-icon name="casino" size="20px" />
             <span>Interactive Challenge</span>
           </div>          
-          <h1 class="game-title">Species Identification Game</h1>
+          <h1 class="game-title">Organisms Identification Game</h1>
           <p class="game-subtitle">
-            Test your knowledge of benthic species and compete on the leaderboard
+            Test your knowledge of benthic organisms and compete on the leaderboard
           </p>
 
           <!-- Stats Preview -->
@@ -19,7 +19,7 @@
               <q-icon name="pets" size="32px" color="primary" />
               <div class="stat-text">
                 <div class="stat-number">7</div>
-                <div class="stat-label">Species</div>
+                <div class="stat-label">Organisms</div>
               </div>
             </div>
             <div class="preview-stat-item">
@@ -74,15 +74,15 @@
               <div class="difficulty-info">
                 <div v-if="difficulty === 'easy'" class="info-text">
                   <q-icon name="info" size="16px" />
-                  <span>Common species with 3 choices • 1x multiplier</span>
+                  <span>Common organisms with 3 choices • 1x multiplier</span>
                 </div>
                 <div v-else-if="difficulty === 'medium'" class="info-text">
                   <q-icon name="info" size="16px" />
-                  <span>Mixed species with 4 choices • 1.5x multiplier</span>
+                  <span>Mixed organisms with 4 choices • 1.5x multiplier</span>
                 </div>
                 <div v-else class="info-text">
                   <q-icon name="info" size="16px" />
-                  <span>Challenging species with 5 choices • 2x multiplier</span>
+                  <span>Challenging organisms with 5 choices • 2x multiplier</span>
                 </div>
               </div>
             </div>
@@ -199,12 +199,12 @@
           <div class="image-container">
             <img
               :src="currentQuestion.imageUrl"
-              :alt="'Species identification question'"
-              class="species-image"
+              :alt="'Organisms identification question'"
+              class="organisms-image"
             />
             <div class="image-label">
               <q-icon name="image_search" size="20px" />
-              <span>Identify this benthic species</span>
+              <span>Identify this benthic organisms</span>
             </div>
             <!-- Timer Progress Ring -->
             <div class="timer-ring">
@@ -222,7 +222,7 @@
           </div>
 
           <div class="options-container">
-            <h3 class="question-text">What species is this?</h3>
+            <h3 class="question-text">What organisms is this?</h3>
             <div class="options-grid" :class="`options-${numOptionsForDifficulty}`">
               <q-btn
                 v-for="option in currentQuestion.options"
@@ -266,25 +266,25 @@
             </div>
           </div>
 
-          <div class="species-info-card">
-            <div class="species-header">
+          <div class="organisms-info-card">
+            <div class="organisms-header">
               <div>
-                <h3 class="species-name">{{ currentQuestion?.speciesInfo.name }}</h3>
-                <p class="species-scientific">{{ currentQuestion?.speciesInfo.scientificName }}</p>
+                <h3 class="organisms-name">{{ currentQuestion?.organismsInfo.name }}</h3>
+                <p class="organisms-scientific">{{ currentQuestion?.organismsInfo.scientificName }}</p>
               </div>
               <q-badge
-                :color="getConservationColor(currentQuestion?.speciesInfo.conservation)"
-                :label="currentQuestion?.speciesInfo.conservation"
+                :color="getConservationColor(currentQuestion?.organismsInfo.conservation)"
+                :label="currentQuestion?.organismsInfo.conservation"
                 class="conservation-badge"
               />
             </div>
 
-            <div class="species-details">
+            <div class="organisms-details">
               <div class="detail-item">
                 <q-icon name="lightbulb" size="20px" color="amber" />
                 <div class="detail-content">
                   <div class="detail-label">Did you know?</div>
-                  <div class="detail-text">{{ currentQuestion?.speciesInfo.facts }}</div>
+                  <div class="detail-text">{{ currentQuestion?.organismsInfo.facts }}</div>
                 </div>
               </div>
               <div class="detail-row">
@@ -292,14 +292,14 @@
                   <q-icon name="terrain" size="20px" color="blue" />
                   <div class="detail-content">
                     <div class="detail-label">Habitat</div>
-                    <div class="detail-text">{{ currentQuestion?.speciesInfo.habitat }}</div>
+                    <div class="detail-text">{{ currentQuestion?.organismsInfo.habitat }}</div>
                   </div>
                 </div>
                 <div class="detail-item">
                   <q-icon name="waves" size="20px" color="cyan" />
                   <div class="detail-content">
                     <div class="detail-label">Depth Range</div>
-                    <div class="detail-text">{{ currentQuestion?.speciesInfo.depthRange }}</div>
+                    <div class="detail-text">{{ currentQuestion?.organismsInfo.depthRange }}</div>
                   </div>
                 </div>
               </div>
@@ -539,8 +539,8 @@ const SPEED_BONUS_THRESHOLD = 15 // bonus points if answered within this time
 const BASE_POINTS = 100
 
 
-// ===== SPECIES DATA =====
-const speciesData = [
+// ===== ORGANISMS DATA =====
+const organismsData = [
   {
     name: 'Eel',
     scientificName: 'Anguilla anguilla',
@@ -549,11 +549,11 @@ const speciesData = [
     depthRange: '0-700m',
     facts: 'Eels can travel thousands of miles to spawn in the Sargasso Sea!',
     images: [
-      '/species/eel/eel-1.jpg',
-      '/species/eel/eel-2.jpg',
-      '/species/eel/eel-3.jpg',
-      '/species/eel/eel-4.jpg',
-      '/species/eel/eel-5.jpg'
+      '/organisms/eel/eel-1.jpg',
+      '/organisms/eel/eel-2.jpg',
+      '/organisms/eel/eel-3.jpg',
+      '/organisms/eel/eel-4.jpg',
+      '/organisms/eel/eel-5.jpg'
     ]
   },
   {
@@ -564,11 +564,11 @@ const speciesData = [
     depthRange: '0-200m',
     facts: 'Scallops have up to 200 tiny eyes along the edge of their mantle!',
     images: [
-      '/species/scallop/scallop-1.jpg',
-      '/species/scallop/scallop-2.jpg',
-      '/species/scallop/scallop-3.jpg',
-      '/species/scallop/scallop-4.jpg',
-      '/species/scallop/scallop-5.jpg'
+      '/organisms/scallop/scallop-1.jpg',
+      '/organisms/scallop/scallop-2.jpg',
+      '/organisms/scallop/scallop-3.jpg',
+      '/organisms/scallop/scallop-4.jpg',
+      '/organisms/scallop/scallop-5.jpg'
     ]
   },
   {
@@ -579,11 +579,11 @@ const speciesData = [
     depthRange: '0-100m',
     facts: 'Crabs walk sideways because their legs bend that way, making it more efficient!',
     images: [
-      '/species/crab/crab-1.jpg',
-      '/species/crab/crab-2.jpg',
-      '/species/crab/crab-3.jpg',
-      '/species/crab/crab-4.jpg',
-      '/species/crab/crab-5.jpg'
+      '/organisms/crab/crab-1.jpg',
+      '/organisms/crab/crab-2.jpg',
+      '/organisms/crab/crab-3.jpg',
+      '/organisms/crab/crab-4.jpg',
+      '/organisms/crab/crab-5.jpg'
     ]
   },
   {
@@ -594,11 +594,11 @@ const speciesData = [
     depthRange: '0-1000m',
     facts: 'Flatfish are born swimming upright but one eye migrates as they mature!',
     images: [
-      '/species/flatfish/flatfish-1.jpg',
-      '/species/flatfish/flatfish-2.jpg',
-      '/species/flatfish/flatfish-3.jpg',
-      '/species/flatfish/flatfish-4.jpg',
-      '/species/flatfish/flatfish-5.jpg'
+      '/organisms/flatfish/flatfish-1.jpg',
+      '/organisms/flatfish/flatfish-2.jpg',
+      '/organisms/flatfish/flatfish-3.jpg',
+      '/organisms/flatfish/flatfish-4.jpg',
+      '/organisms/flatfish/flatfish-5.jpg'
     ]
   },
   {
@@ -609,11 +609,11 @@ const speciesData = [
     depthRange: '0-600m',
     facts: 'Roundfish like cod can change color to blend in with their surroundings!',
     images: [
-      '/species/roundfish/roundfish-1.jpg',
-      '/species/roundfish/roundfish-2.jpg',
-      '/species/roundfish/roundfish-3.jpg',
-      '/species/roundfish/roundfish-4.jpg',
-      '/species/roundfish/roundfish-5.jpg'
+      '/organisms/roundfish/roundfish-1.jpg',
+      '/organisms/roundfish/roundfish-2.jpg',
+      '/organisms/roundfish/roundfish-3.jpg',
+      '/organisms/roundfish/roundfish-4.jpg',
+      '/organisms/roundfish/roundfish-5.jpg'
     ]
   },
   {
@@ -624,11 +624,11 @@ const speciesData = [
     depthRange: '20-300m',
     facts: 'Skates lay eggs in protective cases called "mermaid\'s purses"!',
     images: [
-      '/species/skate/skate-1.jpg',
-      '/species/skate/skate-2.jpg',
-      '/species/skate/skate-3.jpg',
-      '/species/skate/skate-4.jpg',
-      '/species/skate/skate-5.jpg'
+      '/organisms/skate/skate-1.jpg',
+      '/organisms/skate/skate-2.jpg',
+      '/organisms/skate/skate-3.jpg',
+      '/organisms/skate/skate-4.jpg',
+      '/organisms/skate/skate-5.jpg'
     ]
   },
   {
@@ -639,11 +639,11 @@ const speciesData = [
     depthRange: '0-1200m',
     facts: 'Whelks can drill through the shells of other mollusks to eat them!',
     images: [
-      '/species/whelk/whelk-1.jpg',
-      '/species/whelk/whelk-2.jpg',
-      '/species/whelk/whelk-3.jpg',
-      '/species/whelk/whelk-4.jpg',
-      '/species/whelk/whelk-5.jpg'
+      '/organisms/whelk/whelk-1.jpg',
+      '/organisms/whelk/whelk-2.jpg',
+      '/organisms/whelk/whelk-3.jpg',
+      '/organisms/whelk/whelk-4.jpg',
+      '/organisms/whelk/whelk-5.jpg'
     ]
   }
 ]
@@ -829,25 +829,25 @@ function handleTimeout() {
 
 
 // ===== GAME FUNCTIONS =====
-function generateGameQuestions(numQuestions, excludedSpecies = [], numOptions = 4) {
+function generateGameQuestions(numQuestions, excludedOrganisms = [], numOptions = 4) {
   console.log('Generating questions:', { numQuestions, numOptions })
   
   const allQuestions = []
   
-  speciesData.forEach(species => {
-    if (excludedSpecies.includes(species.name)) return
+  organismsData.forEach(organisms => {
+    if (excludedOrganisms.includes(organisms.name)) return
     
-    species.images.forEach(imagePath => {
+    organisms.images.forEach(imagePath => {
       allQuestions.push({
         imageUrl: imagePath,
-        correctAnswer: species.name,
-        speciesInfo: {
-          name: species.name,
-          scientificName: species.scientificName,
-          conservation: species.conservation,
-          habitat: species.habitat,
-          depthRange: species.depthRange,
-          facts: species.facts
+        correctAnswer: organisms.name,
+        organismsInfo: {
+          name: organisms.name,
+          scientificName: organisms.scientificName,
+          conservation: organisms.conservation,
+          habitat: organisms.habitat,
+          depthRange: organisms.depthRange,
+          facts: organisms.facts
         }
       })
     })
@@ -856,11 +856,11 @@ function generateGameQuestions(numQuestions, excludedSpecies = [], numOptions = 
   const selectedQuestions = getRandomElements(allQuestions, numQuestions)
   
   selectedQuestions.forEach(question => {
-    const otherSpecies = speciesData
+    const otherOrganisms = organismsData
       .filter(s => s.name !== question.correctAnswer)
       .map(s => s.name)
     
-    const wrongOptions = getRandomElements(otherSpecies, numOptions - 1)
+    const wrongOptions = getRandomElements(otherOrganisms, numOptions - 1)
     const allOptions = shuffleArray([question.correctAnswer, ...wrongOptions])
     
     question.options = allOptions
@@ -1083,7 +1083,7 @@ watch(leaderboardTab, (newTab) => {
 // ===== LIFECYCLE =====
 onMounted(() => {
   console.log('Game page mounted')
-  console.log('Species data loaded:', speciesData.length, 'species')
+  console.log('Organisms data loaded:', organismsData.length, 'organisms')
   
   // Load default leaderboard
   loadLeaderboard(leaderboardTab.value)
@@ -1310,7 +1310,7 @@ $gradient-error: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
   position: relative;
 }
 
-.species-image {
+.organisms-image {
   width: 100%;
   height: auto;
   max-height: 500px;
@@ -1453,7 +1453,7 @@ $gradient-error: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
   color: #666;
 }
 
-.species-info-card {
+.organisms-info-card {
   background: linear-gradient(135deg, #f5f7fa 0%, #e3e7ed 100%);
   border-radius: 16px;
   padding: 2rem;
@@ -1463,7 +1463,7 @@ $gradient-error: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
   }
 }
 
-.species-header {
+.organisms-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -1471,14 +1471,14 @@ $gradient-error: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
   gap: 1rem;
 }
 
-.species-name {
+.organisms-name {
   font-size: 1.5rem;
   font-weight: 700;
   color: #1a1a1a;
   margin: 0 0 0.25rem 0;
 }
 
-.species-scientific {
+.organisms-scientific {
   font-size: 1rem;
   font-style: italic;
   color: #666;
@@ -1490,7 +1490,7 @@ $gradient-error: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
   font-weight: 600;
 }
 
-.species-details {
+.organisms-details {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;

@@ -8,7 +8,7 @@
           <span>AI-Powered Computer Vision</span>
         </div>
         <h1 class="hero-title">
-          Benthic Species Identification
+          Benthic Organisms Identification
         </h1>
         <p class="hero-subtitle">
           Advanced deep learning models for underwater biodiversity analysis
@@ -18,7 +18,7 @@
         <div class="stats-bar">
           <div class="stat-item">
             <div class="stat-value">7</div>
-            <div class="stat-label">Species Classes</div>
+            <div class="stat-label">Organisms Classes</div>
           </div>
           <div class="stat-divider"></div>
           <div class="stat-item">
@@ -54,7 +54,7 @@
             <q-icon name="category" size="20px" class="q-mr-sm" />
             <div class="tab-content">
               <div class="tab-title">Classification</div>
-              <div class="tab-subtitle">Single species identification</div>
+              <div class="tab-subtitle">Single organisms identification</div>
             </div>
           </q-tab>
           <q-tab name="detection" class="custom-tab">
@@ -156,18 +156,18 @@
                 </q-btn>
               </div>
 
-              <!-- Species Reference -->
-              <div class="glass-card species-reference">
+              <!-- Organisms Reference -->
+              <div class="glass-card organisms-reference">
                 <div class="card-header">
                   <div class="card-title">
                     <q-icon name="pets" color="primary" size="24px" />
-                    <span>Target Species</span>
+                    <span>Target Organisms</span>
                   </div>
                 </div>
-                <div class="species-grid">
-                  <div v-for="(species, index) in speciesCategories" :key="index" class="species-chip">
-                    <div class="species-number">{{ index + 1 }}</div>
-                    <div class="species-name">{{ species }}</div>
+                <div class="organisms-grid">
+                  <div v-for="(organisms, index) in organismsCategories" :key="index" class="organisms-chip">
+                    <div class="organisms-number">{{ index + 1 }}</div>
+                    <div class="organisms-name">{{ organisms }}</div>
                   </div>
                 </div>
               </div>
@@ -226,7 +226,7 @@
                       <div class="prediction-header">
                         <div class="prediction-info">
                           <q-avatar v-if="index === 0" size="24px" color="green" text-color="white" icon="star" />
-                          <span class="prediction-name">{{ result.species }}</span>
+                          <span class="prediction-name">{{ result.organisms }}</span>
                         </div>
                         <span class="prediction-percentage">{{ (result.confidence * 100).toFixed(1) }}%</span>
                       </div>
@@ -416,7 +416,7 @@
                       :style="getBoundingBoxStyle(detection)"
                     >
                       <div class="box-label">
-                        <span class="box-species">{{ detection.species }}</span>
+                        <span class="box-organisms">{{ detection.organisms }}</span>
                         <span class="box-confidence">{{ (detection.confidence * 100).toFixed(0) }}%</span>
                       </div>
                     </div>
@@ -447,11 +447,11 @@
                     v-for="(detection, index) in sortedDetections"
                     :key="index"
                     class="detection-item"
-                    @click="showSpeciesInfo(detection)"
+                    @click="showOrganismsInfo(detection)"
                   >
                     <div class="detection-number">{{ index + 1 }}</div>
                     <div class="detection-info">
-                      <div class="detection-name">{{ detection.species }}</div>
+                      <div class="detection-name">{{ detection.organisms }}</div>
                       <div class="detection-scientific">{{ detection.scientificName }}</div>
                       <q-linear-progress
                         :value="detection.confidence"
@@ -501,13 +501,13 @@
       </q-tab-panels>
     </div>
 
-    <!-- Species Info Dialog -->
-    <q-dialog v-model="showSpeciesDialog">
-      <q-card class="species-dialog">
+    <!-- Organisms Info Dialog -->
+    <q-dialog v-model="showOrganismsDialog">
+      <q-card class="organisms-dialog">
         <q-card-section class="dialog-header">
           <div class="dialog-title">
             <q-icon name="pets" size="28px" color="primary" class="q-mr-sm" />
-            <span>{{ selectedSpecies?.species }}</span>
+            <span>{{ selectedOrganisms?.organisms }}</span>
           </div>
           <q-btn icon="close" flat round dense v-close-popup color="grey-7" />
         </q-card-section>
@@ -520,7 +520,7 @@
               <q-icon name="science" size="20px" />
               <span>Scientific Name</span>
             </div>
-            <div class="info-value italic">{{ selectedSpecies?.scientificName }}</div>
+            <div class="info-value italic">{{ selectedOrganisms?.scientificName }}</div>
           </div>
 
           <div class="info-row">
@@ -528,7 +528,7 @@
               <q-icon name="terrain" size="20px" />
               <span>Habitat</span>
             </div>
-            <div class="info-value">{{ selectedSpecies?.habitat }}</div>
+            <div class="info-value">{{ selectedOrganisms?.habitat }}</div>
           </div>
 
           <div class="info-row">
@@ -536,7 +536,7 @@
               <q-icon name="waves" size="20px" />
               <span>Depth Range</span>
             </div>
-            <div class="info-value">{{ selectedSpecies?.depthRange }}</div>
+            <div class="info-value">{{ selectedOrganisms?.depthRange }}</div>
           </div>
 
           <div class="info-row">
@@ -545,8 +545,8 @@
               <span>Conservation</span>
             </div>
             <q-badge
-              :color="getConservationColor(selectedSpecies?.conservation)"
-              :label="selectedSpecies?.conservation"
+              :color="getConservationColor(selectedOrganisms?.conservation)"
+              :label="selectedOrganisms?.conservation"
               class="conservation-badge"
             />
           </div>
@@ -614,11 +614,11 @@ const imageWidth = ref(0)
 const imageHeight = ref(0)
 
 // Shared state
-const showSpeciesDialog = ref(false)
-const selectedSpecies = ref(null)
+const showOrganismsDialog = ref(false)
+const selectedOrganisms = ref(null)
 
-// Species Categories for Classification (7 categories)
-const speciesCategories = [
+// Organisms Categories for Classification (7 categories)
+const organismsCategories = [
   'Eel',
   'Scallop', 
   'Crab',
@@ -628,8 +628,8 @@ const speciesCategories = [
   'Whelk'
 ]
 
-// Species Info Database
-const speciesInfo = {
+// Organisms Info Database
+const organismsInfo = {
   'Eel': {
     scientificName: 'Anguilla anguilla',
     habitat: 'Rocky crevices and muddy bottoms',
@@ -824,7 +824,7 @@ async function classifyImage() {
 
     classificationResults.value = topk
       .map(it => ({
-        species: it.label || 'Unknown',
+        organisms: it.label || 'Unknown',
         confidence: Number(it.score ?? 0)
       }))
       .sort((a, b) => b.confidence - a.confidence)
@@ -984,15 +984,15 @@ async function detectObjects() {
         width: Math.abs(x2 - x1),
         height: Math.abs(y2 - y1)
       }
-      const species = d.label || 'Unknown'
+      const organisms = d.label || 'Unknown'
       return {
-        species,
+        organisms,
         confidence: Number(d.score ?? 0),
         bbox,
-        scientificName: speciesInfo[species]?.scientificName || 'Unknown',
-        habitat: speciesInfo[species]?.habitat || 'Unknown',
-        depthRange: speciesInfo[species]?.depthRange || 'Unknown',
-        conservation: speciesInfo[species]?.conservation || 'Unknown'
+        scientificName: organismsInfo[organisms]?.scientificName || 'Unknown',
+        habitat: organismsInfo[organisms]?.habitat || 'Unknown',
+        depthRange: organismsInfo[organisms]?.depthRange || 'Unknown',
+        conservation: organismsInfo[organisms]?.conservation || 'Unknown'
       }
     })
 
@@ -1077,9 +1077,9 @@ function getConservationColor(status) {
   }
 }
 
-function showSpeciesInfo(detection) {
-  selectedSpecies.value = detection
-  showSpeciesDialog.value = true
+function showOrganismsInfo(detection) {
+  selectedOrganisms.value = detection
+  showOrganismsDialog.value = true
 }
 
 function downloadResults() {
@@ -1088,7 +1088,7 @@ function downloadResults() {
     image: detectionImage.value,
     processingTime: processingTime.value,
     detections: detections.value.map(d => ({
-      species: d.species,
+      organisms: d.organisms,
       scientificName: d.scientificName,
       confidence: d.confidence,
       boundingBox: d.bbox
@@ -1461,14 +1461,14 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   }
 }
 
-// SPECIES REFERENCE
-.species-grid {
+// ORGANISMS REFERENCE
+.organisms-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
 }
 
-.species-chip {
+.organisms-chip {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -1483,7 +1483,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   }
 }
 
-.species-number {
+.organisms-number {
   width: 28px;
   height: 28px;
   display: flex;
@@ -1497,7 +1497,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   flex-shrink: 0;
 }
 
-.species-name {
+.organisms-name {
   font-size: 0.875rem;
   font-weight: 500;
   color: #333;
@@ -1692,20 +1692,27 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  background: #000;  // Black background for letterboxing
 }
 
 .image-wrapper {
   position: relative;
   background: #000;
+  min-height: 300px;  // Minimum container height
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .detection-image {
   width: 100%;
   height: auto;
-  max-height: 600px;  // Add a max-height constraint
   display: block;
-  object-fit: contain;  // Add this to ensure the image scales proportionally
+  object-fit: contain;  // Preserve aspect ratio
+  max-width: 100%;
+  max-height: 70vh;  // Use viewport height instead of fixed pixels
 }
+
 
 
 .bounding-box {
@@ -1744,7 +1751,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   gap: 0.5rem;
 }
 
-.box-species {
+.box-organisms {
   font-size: 0.875rem;
 }
 
@@ -1869,8 +1876,8 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   margin-top: 0.25rem;
 }
 
-// SPECIES DIALOG
-.species-dialog {
+// ORGANISMS DIALOG
+.organisms-dialog {
   min-width: 500px;
   border-radius: 20px;
   
@@ -1958,7 +1965,7 @@ $gradient-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
     }
   }
   
-  .species-grid {
+  .organisms-grid {
     grid-template-columns: 1fr;
   }
 }

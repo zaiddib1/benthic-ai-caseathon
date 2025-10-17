@@ -18,7 +18,7 @@
               Exploring the Ocean Floor<br/>with Artificial Intelligence
             </h1>
             <p class="hero-subtitle">
-              Advanced computer vision for benthic species identification and marine biodiversity monitoring
+              Advanced computer vision for benthic organisms identification and marine biodiversity monitoring
             </p>
             
             <!-- Stats Pills -->
@@ -33,7 +33,7 @@
               </div>
               <div class="stat-pill">
                 <q-icon name="pets" size="20px" />
-                <span>7 Species</span>
+                <span>7 Organisms</span>
               </div>
             </div>
 
@@ -52,7 +52,7 @@
                 outline
                 size="lg"
                 color="white"
-                label="Play Species Game"
+                label="Play Organisms Game"
                 icon="casino"
                 to="/game"
                 class="hero-btn secondary-btn"
@@ -103,7 +103,7 @@
               </div>
               <h3 class="feature-title">Image Classification</h3>
               <p class="feature-description">
-                State-of-the-art deep learning models trained on thousands of underwater images to accurately identify benthic species
+                State-of-the-art deep learning models trained on thousands of underwater images to accurately identify benthic organisms
               </p>
               <div class="feature-metrics">
                 <div class="metric-item">
@@ -130,7 +130,7 @@
               </div>
               <h3 class="feature-title">Object Detection</h3>
               <p class="feature-description">
-                Real-time detection and localization of multiple species in complex underwater environments
+                Real-time detection and localization of multiple organisms in complex underwater environments
               </p>
               <div class="feature-metrics">
                 <div class="metric-item">
@@ -153,7 +153,7 @@
               </div>
               <h3 class="feature-title">Ecosystem Monitoring</h3>
               <p class="feature-description">
-                Track biodiversity patterns and support conservation efforts with automated species distribution analysis
+                Track biodiversity patterns and support conservation efforts with automated organism distribution analysis
               </p>
               <div class="feature-metrics">
                 <div class="metric-item">
@@ -184,7 +184,7 @@
               Test Your Marine Knowledge
             </h2>
             <p class="game-description">
-              Challenge yourself to identify benthic species from real underwater imagery. Compete with our AI model and learn about fascinating seafloor creatures while contributing to marine science education.
+              Challenge yourself to identify benthic organisms from real underwater imagery. Compete with our AI model and learn about fascinating seafloor creatures while contributing to marine science education.
             </p>
 
             <div class="game-features">
@@ -211,7 +211,7 @@
                   <q-icon name="check" size="20px" color="white" />
                 </div>
                 <div class="feature-text">
-                  <div class="feature-text-title">Educational Species Facts</div>
+                  <div class="feature-text-title">Educational Organism Facts</div>
                   <div class="feature-text-desc">Learn about marine biodiversity</div>
                 </div>
               </div>
@@ -239,7 +239,7 @@
                   <div class="preview-overlay">
                     <div class="preview-question">
                       <q-icon name="help_outline" size="32px" />
-                      <span>Can you identify this species?</span>
+                      <span>Can you identify this organisms?</span>
                     </div>
                   </div>
                 </q-img>
@@ -277,7 +277,7 @@
                   <q-icon name="school" size="24px" color="green" />
                   <div>
                     <div class="preview-stat-value">7</div>
-                    <div class="preview-stat-label">Species</div>
+                    <div class="preview-stat-label">Organisms</div>
                   </div>
                 </div>              
               </div>
@@ -297,7 +297,7 @@
             </div>
             <div class="stat-content">
               <div class="stat-number">7</div>
-              <div class="stat-label">Species Identified</div>
+              <div class="stat-label">Organisms Identified</div>
               <div class="stat-sublabel">Across multiple ecosystems</div>
             </div>
           </div>
@@ -350,7 +350,7 @@
             Ready to Explore Marine Biodiversity?
           </h2>
           <p class="cta-description">
-            Discover how our AI solution can revolutionize underwater species monitoring and contribute to marine conservation efforts
+            Discover how our AI solution can revolutionize underwater organisms monitoring and contribute to marine conservation efforts
           </p>
           <div class="cta-buttons">
             <q-btn

@@ -7,14 +7,14 @@
             <div class="brand-icon">
               <q-icon name="waves" size="24px" />
             </div>
-            <span class="brand-name">BenthicAI</span>
+            <span class="brand-name">DeepFin</span>
           </div>
         </q-toolbar-title>
 
         <q-tabs v-model="activeTab" class="nav-tabs">
           <q-route-tab name="home" to="/" label="Home" />
           <q-route-tab name="solution" to="/solution" label="Our Solution" />
-          <q-route-tab name="game" to="/game" label="Species Game" />
+          <q-route-tab name="game" to="/game" label="Organisms Game" />
           <q-route-tab name="about" to="/about" label="About" />
         </q-tabs>
 
@@ -40,7 +40,7 @@
           <div class="footer-content">
             <div class="footer-left">
               <q-icon name="copyright" size="16px" class="q-mr-xs" />
-              <span>2025 BenthicAI | Marine Biodiversity Conservation</span>
+              <span>2025 DeepFin | Marine Biodiversity Conservation</span>
             </div>
             <div class="footer-right">
               <q-icon name="eco" size="18px" class="q-mr-xs" />

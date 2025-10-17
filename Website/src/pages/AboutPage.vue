@@ -11,10 +11,10 @@
             <div class="hero-inner">
               <div class="hero-badge">
                 <q-icon name="info" size="18px" />
-                <span>About BenthicAI</span>
+                <span>About DeepFin</span>
               </div>
               <h1 class="hero-title">
-                Marine Species Identification<br/>Made Simple
+                Marine Organisms Identification<br/>Made Simple
               </h1>
               <p class="hero-subtitle">
                 Our AI-powered platform for the William & Mary AI Club Case-a-thon 2025
@@ -39,25 +39,25 @@
         </div>
       </section>
   
-      <!-- What is BenthicAI Section -->
+      <!-- What is DeepFin Section -->
       <section class="content-section">
         <div class="container">
           <div class="content-card">
             <div class="section-header">
               <q-icon name="waves" size="48px" color="primary" />
-              <h2>What is BenthicAI?</h2>
+              <h2>What is DeepFin?</h2>
             </div>
             <div class="content-body">
               <p>
-                BenthicAI is an artificial intelligence platform designed to identify and classify benthic marine species 
+                DeepFin is an artificial intelligence platform designed to identify and classify benthic marine organisms 
                 from underwater images. Benthic organisms live on or near the ocean floor and play crucial roles in marine 
                 ecosystems. Our platform uses advanced computer vision to help researchers, conservationists, and marine 
                 biologists quickly analyze underwater imagery.
               </p>
               <p>
                 The platform offers two main features: <strong>Image Classification</strong> for identifying the primary 
-                species in a photo, and <strong>Object Detection</strong> for locating multiple species within complex 
-                underwater scenes. Currently, we can identify seven key benthic species: Eel, Scallop, Crab, Flatfish, 
+                organisms in a photo, and <strong>Object Detection</strong> for locating multiple organisms within complex 
+                underwater scenes. Currently, we can identify seven key benthic organisms: Eel, Scallop, Crab, Flatfish, 
                 Roundfish, Skate, and Whelk.
               </p>
             </div>
@@ -81,7 +81,7 @@
                     <h3>Image Classification Model</h3>
                     <p>
                       Uses a convolutional neural network trained on thousands of labeled underwater images. When you 
-                      upload a photo, the model analyzes visual patterns and returns the most likely species with 
+                      upload a photo, the model analyzes visual patterns and returns the most likely organisms with 
                       confidence scores for all seven categories.
                     </p>
                   </div>
@@ -92,8 +92,8 @@
                   <div class="model-content">
                     <h3>Object Detection Model</h3>
                     <p>
-                      Built on YOLO11 (You Only Look Once), this model can detect and localize multiple species in a 
-                      single image. It draws bounding boxes around each detected organism and provides species labels 
+                      Built on YOLO11 (You Only Look Once), this model can detect and localize multiple organisms in a 
+                      single image. It draws bounding boxes around each detected organism and provides organisms labels 
                       with confidence scores. The model processes images in real-time, making it practical for analyzing 
                       large datasets.
                     </p>
@@ -139,7 +139,7 @@
               <p>
                 We chose to focus on the marine sciences prompt as we believed there is a critical need for automated tools 
                 in marine biology research. Our solution helps streamline the time-consuming process of analyzing underwater 
-                imagery, allowing researchers to focus more on conservation and ecosystem management. BenthicAI demonstrates 
+                imagery, allowing researchers to focus more on conservation and ecosystem management. DeepFin demonstrates 
                 how AI can be practically applied to solve real environmental challenges.
               </p>
             </div>
@@ -156,7 +156,7 @@
               <span>Our Team</span>
             </div>
             <h2 class="section-title">Meet the Team</h2>
-            <p class="section-subtitle">The people behind BenthicAI</p>
+            <p class="section-subtitle">The people behind DeepFin</p>
           </div>
   
           <div class="team-grid">
@@ -199,9 +199,9 @@
         <div class="cta-background"></div>
         <div class="container">
           <div class="cta-content">
-            <h2 class="cta-title">Try BenthicAI Today</h2>
+            <h2 class="cta-title">Try DeepFin Today</h2>
             <p class="cta-description">
-              Experience our AI models firsthand or test your knowledge with our species identification game
+              Experience our AI models firsthand or test your knowledge with our organisms identification game
             </p>
             <div class="cta-buttons">
               <q-btn
