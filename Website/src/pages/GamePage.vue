@@ -10,7 +10,7 @@
           </div>          
           <h1 class="game-title">Species Identification Game</h1>
           <p class="game-subtitle">
-            Test your knowledge of benthic species and compete with our AI model
+            Test your knowledge of benthic species and compete on the leaderboard
           </p>
 
           <!-- Stats Preview -->
@@ -30,10 +30,10 @@
               </div>
             </div>
             <div class="preview-stat-item">
-              <q-icon name="emoji_events" size="32px" color="amber" />
+              <q-icon name="timer" size="32px" color="deep-orange" />
               <div class="stat-text">
-                <div class="stat-number">100</div>
-                <div class="stat-label">Points Each</div>
+                <div class="stat-number">30s</div>
+                <div class="stat-label">Per Question</div>
               </div>
             </div>
           </div>
@@ -42,6 +42,21 @@
           <div class="settings-card">
             <h3 class="settings-title">Game Settings</h3>
             
+            <div class="setting-group">
+              <label class="setting-label">Player Name (for leaderboard)</label>
+              <q-input
+                v-model="playerName"
+                outlined
+                placeholder="Enter your name"
+                maxlength="20"
+                class="player-name-input"
+              >
+                <template v-slot:prepend>
+                  <q-icon name="person" />
+                </template>
+              </q-input>
+            </div>
+
             <div class="setting-group">
               <label class="setting-label">Difficulty Level</label>
               <q-btn-toggle
@@ -59,15 +74,15 @@
               <div class="difficulty-info">
                 <div v-if="difficulty === 'easy'" class="info-text">
                   <q-icon name="info" size="16px" />
-                  <span>Common species with 3 choices per question</span>
+                  <span>Common species with 3 choices • 1x multiplier</span>
                 </div>
                 <div v-else-if="difficulty === 'medium'" class="info-text">
                   <q-icon name="info" size="16px" />
-                  <span>Mixed species with 4 choices per question</span>
+                  <span>Mixed species with 4 choices • 1.5x multiplier</span>
                 </div>
                 <div v-else class="info-text">
                   <q-icon name="info" size="16px" />
-                  <span>Challenging species with 5 choices per question</span>
+                  <span>Challenging species with 5 choices • 2x multiplier</span>
                 </div>
               </div>
             </div>
@@ -94,8 +109,58 @@
               label="Start Game"
               icon="play_arrow"
               @click="startGame"
+              :disable="!playerName.trim()"
               class="start-btn"
             />
+          </div>
+
+          <!-- Leaderboard Preview -->
+          <div class="leaderboard-preview">
+            <h3 class="leaderboard-title">
+              <q-icon name="leaderboard" size="24px" />
+              Top Players
+            </h3>
+            <q-tabs
+              v-model="leaderboardTab"
+              dense
+              class="leaderboard-tabs"
+              active-color="primary"
+              indicator-color="primary"
+            >
+              <q-tab name="easy-5" label="Easy • 5Q" />
+              <q-tab name="medium-10" label="Medium • 10Q" />
+              <q-tab name="hard-15" label="Hard • 15Q" />
+            </q-tabs>
+            <div class="leaderboard-content">
+              <div v-if="loadingLeaderboard" class="loading-state">
+                <q-spinner color="primary" size="32px" />
+              </div>
+              <div v-else-if="topPlayers.length === 0" class="empty-state">
+                <q-icon name="emoji_events" size="48px" color="grey-4" />
+                <p>No scores yet. Be the first!</p>
+              </div>
+              <div v-else class="leaderboard-list">
+                <div
+                  v-for="(player, index) in topPlayers.slice(0, 5)"
+                  :key="player.id"
+                  class="leaderboard-item"
+                >
+                  <div class="rank" :class="`rank-${index + 1}`">
+                    <q-icon v-if="index === 0" name="workspace_premium" size="24px" color="yellow-5" />
+                    <q-icon v-else-if="index === 1" name="military_tech" size="24px" color="grey-2" />
+                    <q-icon v-else-if="index === 2" name="military_tech" size="24px" color="orange" />
+                    <span v-else>{{ index + 1 }}</span>
+                  </div>
+                  <div class="player-info">
+                    <div class="player-name">{{ player.playerName }}</div>
+                    <div class="player-stats">
+                      {{ player.accuracy }}% • {{ formatTime(player.totalTime) }}
+                    </div>
+                  </div>
+                  <div class="player-score">{{ player.totalScore }}</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -114,6 +179,10 @@
             <div class="score-display">
               <q-icon name="stars" size="20px" />
               <span>Score: {{ score }}</span>
+            </div>
+            <div class="timer-display" :class="{ 'timer-warning': questionTimeLeft <= 10 }">
+              <q-icon name="timer" size="20px" />
+              <span>{{ questionTimeLeft }}s</span>
             </div>
           </div>
           <q-linear-progress
@@ -137,6 +206,19 @@
               <q-icon name="image_search" size="20px" />
               <span>Identify this benthic species</span>
             </div>
+            <!-- Timer Progress Ring -->
+            <div class="timer-ring">
+              <q-circular-progress
+                :value="(questionTimeLeft / QUESTION_TIME_LIMIT) * 100"
+                size="60px"
+                :thickness="0.15"
+                color="primary"
+                track-color="grey-3"
+                class="timer-progress"
+              >
+                <div class="timer-text">{{ questionTimeLeft }}</div>
+              </q-circular-progress>
+            </div>
           </div>
 
           <div class="options-container">
@@ -150,6 +232,7 @@
                 color="white"
                 text-color="primary"
                 @click="handleAnswer(option)"
+                :disable="questionTimeLeft === 0"
                 class="option-btn"
                 :class="{ 'option-selected': selectedAnswer === option }"
               >
@@ -174,6 +257,13 @@
             <p class="feedback-subtitle" v-if="!lastAnswerCorrect">
               The correct answer was <strong>{{ currentQuestion?.correctAnswer }}</strong>
             </p>
+            <div v-if="lastAnswerCorrect" class="points-earned">
+              <q-icon name="add_circle" size="24px" color="green" />
+              <span>+{{ lastPointsEarned }} points</span>
+              <q-badge v-if="lastTimeBonus > 0" color="orange" class="time-bonus-badge">
+                +{{ lastTimeBonus }} speed bonus!
+              </q-badge>
+            </div>
           </div>
 
           <div class="species-info-card">
@@ -237,7 +327,7 @@
             <span>Game Complete</span>
           </div>
 
-          <h1 class="results-title">Great Job!</h1>
+          <h1 class="results-title">Great Job, {{ playerName }}!</h1>
           <p class="results-subtitle">
             Here's how you performed
           </p>
@@ -247,7 +337,20 @@
             <div class="final-score">
               <div class="score-label">Final Score</div>
               <div class="score-value">{{ score }}</div>
-              <div class="score-max">out of {{ questions.length * 100 }}</div>
+              <div class="score-breakdown">
+                <div class="breakdown-item">
+                  <q-icon name="check_circle" size="16px" color="green" />
+                  <span>{{ correctAnswers * 100 }} base points</span>
+                </div>
+                <div class="breakdown-item">
+                  <q-icon name="speed" size="16px" color="orange" />
+                  <span>{{ totalSpeedBonus }} speed bonus</span>
+                </div>
+                <div class="breakdown-item">
+                  <q-icon name="local_fire_department" size="16px" color="red" />
+                  <span>×{{ difficultyMultiplier }} difficulty multiplier</span>
+                </div>
+              </div>
             </div>
             <q-linear-progress
               :value="accuracy / 100"
@@ -270,6 +373,15 @@
             </div>
             <div class="result-stat">
               <div class="result-stat-icon">
+                <q-icon name="timer" size="32px" color="blue" />
+              </div>
+              <div class="result-stat-content">
+                <div class="result-stat-value">{{ formatTime(totalGameTime) }}</div>
+                <div class="result-stat-label">Total Time</div>
+              </div>
+            </div>
+            <div class="result-stat">
+              <div class="result-stat-icon">
                 <q-icon name="local_fire_department" size="32px" color="orange" />
               </div>
               <div class="result-stat-content">
@@ -277,14 +389,21 @@
                 <div class="result-stat-label">Best Streak</div>
               </div>
             </div>
-            <div class="result-stat">
-              <div class="result-stat-icon">
-                <q-icon name="psychology" size="32px" color="purple" />
-              </div>
-              <div class="result-stat-content">
-                <div class="result-stat-value">{{ correctAnswers }}</div>
-                <div class="result-stat-label">Correct</div>
-              </div>
+          </div>
+
+          <!-- Leaderboard Position -->
+          <div v-if="leaderboardPosition !== null" class="leaderboard-position-card">
+            <q-icon name="leaderboard" size="48px" color="primary" />
+            <h3>You ranked #{{ leaderboardPosition }} on the leaderboard!</h3>
+            <p>{{ difficulty.toUpperCase() }} • {{ numQuestions }} Questions</p>
+          </div>
+
+          <!-- Save to Leaderboard -->
+          <div v-if="!scoreSaved" class="save-score-card">
+            <q-spinner v-if="savingScore" color="primary" size="32px" />
+            <div v-else>
+              <q-icon name="cloud_upload" size="48px" color="primary" />
+              <p>Saving your score to the leaderboard...</p>
             </div>
           </div>
 
@@ -295,24 +414,6 @@
               <div v-for="achievement in achievements" :key="achievement.id" class="achievement-card">
                 <q-icon :name="achievement.icon" size="32px" :color="achievement.color" />
                 <div class="achievement-name">{{ achievement.name }}</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Review Mistakes -->
-          <div v-if="incorrectAnswers.length > 0" class="mistakes-section">
-            <h3 class="mistakes-title">Review Your Mistakes</h3>
-            <div class="mistakes-list">
-              <div v-for="mistake in incorrectAnswers" :key="mistake.questionId" class="mistake-item">
-                <q-icon name="cancel" size="20px" color="red" />
-                <div class="mistake-info">
-                  <div class="mistake-text">
-                    You answered: <strong>{{ mistake.selectedAnswer }}</strong>
-                  </div>
-                  <div class="mistake-correct">
-                    Correct: <strong>{{ mistake.correctAnswer }}</strong>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -332,11 +433,93 @@
               outline
               color="primary"
               size="lg"
-              label="Back to Home"
-              icon="home"
-              to="/"
+              label="View Full Leaderboard"
+              icon="leaderboard"
+              @click="gameState = 'leaderboard'"
               class="action-btn"
             />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Full Leaderboard Screen -->
+    <div v-else-if="gameState === 'leaderboard'" class="leaderboard-screen">
+      <div class="container">
+        <div class="leaderboard-full">
+          <div class="leaderboard-header">
+            <h1 class="leaderboard-title-main">
+              <q-icon name="emoji_events" size="48px" />
+              Leaderboard
+            </h1>
+            <q-btn
+              flat
+              round
+              icon="close"
+              @click="gameState = 'start'"
+              class="close-btn"
+            />
+          </div>
+
+          <q-tabs
+            v-model="leaderboardTab"
+            dense
+            class="leaderboard-tabs-full"
+            active-color="primary"
+            indicator-color="primary"
+            align="center"
+          >
+            <q-tab name="easy-5" label="Easy • 5Q" />
+            <q-tab name="easy-10" label="Easy • 10Q" />
+            <q-tab name="easy-15" label="Easy • 15Q" />
+            <q-tab name="medium-5" label="Medium • 5Q" />
+            <q-tab name="medium-10" label="Medium • 10Q" />
+            <q-tab name="medium-15" label="Medium • 15Q" />
+            <q-tab name="hard-5" label="Hard • 5Q" />
+            <q-tab name="hard-10" label="Hard • 10Q" />
+            <q-tab name="hard-15" label="Hard • 15Q" />
+          </q-tabs>
+
+          <div class="leaderboard-content-full">
+            <div v-if="loadingLeaderboard" class="loading-state">
+              <q-spinner color="primary" size="48px" />
+              <p>Loading leaderboard...</p>
+            </div>
+            <div v-else-if="topPlayers.length === 0" class="empty-state">
+              <q-icon name="emoji_events" size="64px" color="grey-4" />
+              <p>No scores yet for this category. Be the first!</p>
+            </div>
+            <div v-else class="leaderboard-table">
+              <div
+                v-for="(player, index) in topPlayers"
+                :key="player.id"
+                class="leaderboard-row"
+                :class="{ 'highlighted': player.playerName === playerName && player.timestamp > Date.now() - 60000 }"
+              >
+                <div class="rank-cell" :class="`rank-${index + 1}`">
+                  <q-icon v-if="index === 0" name="workspace_premium" size="32px" color="amber" />
+                  <q-icon v-else-if="index === 1" name="military_tech" size="32px" color="grey-6" />
+                  <q-icon v-else-if="index === 2" name="military_tech" size="32px" color="orange" />
+                  <span v-else class="rank-number">{{ index + 1 }}</span>
+                </div>
+                <div class="player-cell">
+                  <div class="player-name-full">{{ player.playerName }}</div>
+                  <div class="player-date">{{ formatDate(player.timestamp) }}</div>
+                </div>
+                <div class="stats-cell">
+                  <q-chip dense color="green" text-color="white" icon="check_circle">
+                    {{ player.accuracy }}%
+                  </q-chip>
+                  <q-chip dense color="blue" text-color="white" icon="timer">
+                    {{ formatTime(player.totalTime) }}
+                  </q-chip>
+                  <q-chip dense color="orange" text-color="white" icon="local_fire_department">
+                    {{ player.bestStreak }} streak
+                  </q-chip>
+                </div>
+                <div class="score-cell">{{ player.totalScore }}</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -344,8 +527,17 @@
   </q-page>
 </template>
 
-<script setup>
-import { ref, computed, onMounted } from 'vue'
+<script setup lang="ts">
+import { ref, computed, onMounted, watch } from 'vue'
+import { collection, addDoc, query, orderBy, limit, getDocs, where } from 'firebase/firestore'
+import { db } from '../../firebase'
+
+
+// ===== CONSTANTS =====
+const QUESTION_TIME_LIMIT = 30 // seconds per question
+const SPEED_BONUS_THRESHOLD = 15 // bonus points if answered within this time
+const BASE_POINTS = 100
+
 
 // ===== SPECIES DATA =====
 const speciesData = [
@@ -456,13 +648,25 @@ const speciesData = [
   }
 ]
 
+
 // ===== GAME STATE =====
 const gameState = ref('start')
 const difficulty = ref('medium')
 const numQuestions = ref(10)
+const playerName = ref('')
 const selectedAnswer = ref('')
 const showingFeedback = ref(false)
 const lastAnswerCorrect = ref(false)
+const lastPointsEarned = ref(0)
+const lastTimeBonus = ref(0)
+
+
+// ===== TIMER STATE =====
+const questionTimeLeft = ref(QUESTION_TIME_LIMIT)
+const questionStartTime = ref(0)
+const totalGameTime = ref(0)
+let timerInterval = null
+
 
 // ===== GAME LOGIC STATE =====
 const questions = ref([])
@@ -471,6 +675,17 @@ const currentQuestionIndex = ref(0)
 const currentStreak = ref(0)
 const bestStreak = ref(0)
 
+
+
+// ===== LEADERBOARD STATE =====
+const leaderboardTab = ref('medium-10')
+const topPlayers = ref([])
+const loadingLeaderboard = ref(false)
+const scoreSaved = ref(false)
+const savingScore = ref(false)
+const leaderboardPosition = ref(null)
+
+
 // ===== COMPUTED PROPERTIES =====
 const numOptionsForDifficulty = computed(() => {
   if (difficulty.value === 'easy') return 3
@@ -478,15 +693,32 @@ const numOptionsForDifficulty = computed(() => {
   return 5
 })
 
+
+const difficultyMultiplier = computed(() => {
+  if (difficulty.value === 'easy') return 1
+  if (difficulty.value === 'medium') return 1.5
+  return 2
+})
+
+
 const currentQuestion = computed(() => {
   return questions.value[currentQuestionIndex.value] || null
 })
 
+
 const score = computed(() => {
+  return Math.round(answers.value.reduce((total, answer) => {
+    return total + (answer.pointsEarned || 0)
+  }, 0) * difficultyMultiplier.value)
+})
+
+
+const totalSpeedBonus = computed(() => {
   return answers.value.reduce((total, answer) => {
-    return total + (answer.isCorrect ? 100 : 0)
+    return total + (answer.speedBonus || 0)
   }, 0)
 })
+
 
 const accuracy = computed(() => {
   if (answers.value.length === 0) return 0
@@ -494,13 +726,11 @@ const accuracy = computed(() => {
   return Math.round((correct / answers.value.length) * 100)
 })
 
+
 const correctAnswers = computed(() => {
   return answers.value.filter(a => a.isCorrect).length
 })
 
-const incorrectAnswers = computed(() => {
-  return answers.value.filter(a => !a.isCorrect)
-})
 
 const achievements = computed(() => {
   const earned = []
@@ -517,9 +747,13 @@ const achievements = computed(() => {
   if (accuracy.value >= 80) {
     earned.push({ id: 'accurate', name: 'Sharp Eye', icon: 'visibility', color: 'green' })
   }
+  if (totalSpeedBonus.value >= 200) {
+    earned.push({ id: 'speedy', name: 'Speed Demon', icon: 'speed', color: 'red' })
+  }
   
   return earned
 })
+
 
 // ===== UTILITY FUNCTIONS =====
 function shuffleArray(array) {
@@ -531,10 +765,68 @@ function shuffleArray(array) {
   return shuffled
 }
 
+
 function getRandomElements(array, count) {
   const shuffled = shuffleArray(array)
   return shuffled.slice(0, count)
 }
+
+
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
+
+function formatDate(timestamp) {
+  const date = new Date(timestamp)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  
+  if (diffMins < 1) return 'Just now'
+  if (diffMins < 60) return `${diffMins}m ago`
+  if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`
+  return date.toLocaleDateString()
+}
+
+
+// ===== TIMER FUNCTIONS =====
+function startQuestionTimer() {
+  questionTimeLeft.value = QUESTION_TIME_LIMIT
+  questionStartTime.value = Date.now()
+  
+  if (timerInterval) {
+    clearInterval(timerInterval)
+  }
+  
+  timerInterval = window.setInterval(() => {
+    questionTimeLeft.value--
+    
+    if (questionTimeLeft.value <= 0) {
+      if (timerInterval) {
+        clearInterval(timerInterval)
+      }
+      handleTimeout()
+    }
+  }, 1000)
+}
+
+
+function stopQuestionTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval)
+    timerInterval = null
+  }
+}
+
+
+function handleTimeout() {
+  console.log('Time ran out!')
+  handleAnswer('') // Empty answer = timeout
+}
+
 
 // ===== GAME FUNCTIONS =====
 function generateGameQuestions(numQuestions, excludedSpecies = [], numOptions = 4) {
@@ -542,7 +834,6 @@ function generateGameQuestions(numQuestions, excludedSpecies = [], numOptions = 
   
   const allQuestions = []
   
-  // Create a pool of all possible questions
   speciesData.forEach(species => {
     if (excludedSpecies.includes(species.name)) return
     
@@ -562,10 +853,8 @@ function generateGameQuestions(numQuestions, excludedSpecies = [], numOptions = 
     })
   })
   
-  // Select random questions
   const selectedQuestions = getRandomElements(allQuestions, numQuestions)
   
-  // Add options to each question
   selectedQuestions.forEach(question => {
     const otherSpecies = speciesData
       .filter(s => s.name !== question.correctAnswer)
@@ -581,6 +870,7 @@ function generateGameQuestions(numQuestions, excludedSpecies = [], numOptions = 
   console.log('Generated questions:', questions.value)
 }
 
+
 function preloadImages(questions) {
   questions.forEach(q => {
     const img = new Image()
@@ -588,29 +878,60 @@ function preloadImages(questions) {
   })
 }
 
+
 function startGame() {
-  console.log('Starting game:', { difficulty: difficulty.value, numQuestions: numQuestions.value })
+  if (!playerName.value.trim()) return
+  
+  console.log('Starting game:', { difficulty: difficulty.value, numQuestions: numQuestions.value, player: playerName.value })
   
   resetGame()
   generateGameQuestions(numQuestions.value, [], numOptionsForDifficulty.value)
   preloadImages(questions.value)
   
   gameState.value = 'playing'
+  totalGameTime.value = 0
+  startQuestionTimer()
 }
+
 
 function handleAnswer(answer) {
   console.log('Answer submitted:', answer)
   
+  stopQuestionTimer()
+  
+  const timeSpent = QUESTION_TIME_LIMIT - questionTimeLeft.value
+  totalGameTime.value += timeSpent
+  
   selectedAnswer.value = answer
   const isCorrect = answer === currentQuestion.value.correctAnswer
   lastAnswerCorrect.value = isCorrect
+  
+  // Calculate points
+  let pointsEarned = 0
+  let speedBonus = 0
+  
+  if (isCorrect) {
+    pointsEarned = BASE_POINTS
+    
+    // Speed bonus calculation
+    if (questionTimeLeft.value >= SPEED_BONUS_THRESHOLD) {
+      speedBonus = Math.round((questionTimeLeft.value / QUESTION_TIME_LIMIT) * 50)
+      pointsEarned += speedBonus
+    }
+  }
+  
+  lastPointsEarned.value = Math.round(pointsEarned * difficultyMultiplier.value)
+  lastTimeBonus.value = speedBonus
   
   // Record answer
   answers.value.push({
     questionId: currentQuestionIndex.value,
     selectedAnswer: answer,
     correctAnswer: currentQuestion.value.correctAnswer,
-    isCorrect: isCorrect
+    isCorrect: isCorrect,
+    timeSpent: timeSpent,
+    pointsEarned: pointsEarned,
+    speedBonus: speedBonus
   })
   
   // Update streak
@@ -626,15 +947,21 @@ function handleAnswer(answer) {
   showingFeedback.value = true
 }
 
+
 function goToNextQuestion() {
   showingFeedback.value = false
   selectedAnswer.value = ''
   currentQuestionIndex.value++
   
   if (currentQuestionIndex.value >= questions.value.length) {
+    stopQuestionTimer()
     gameState.value = 'complete'
+    saveScoreToLeaderboard()
+  } else {
+    startQuestionTimer()
   }
 }
+
 
 function resetGame() {
   questions.value = []
@@ -645,12 +972,20 @@ function resetGame() {
   selectedAnswer.value = ''
   showingFeedback.value = false
   lastAnswerCorrect.value = false
+  lastPointsEarned.value = 0
+  lastTimeBonus.value = 0
+  totalGameTime.value = 0
+  scoreSaved.value = false
+  leaderboardPosition.value = null
+  stopQuestionTimer()
 }
+
 
 function playAgain() {
   gameState.value = 'start'
   resetGame()
 }
+
 
 function getConservationColor(status) {
   switch (status) {
@@ -662,11 +997,103 @@ function getConservationColor(status) {
   }
 }
 
+
+// ===== LEADERBOARD FUNCTIONS =====
+async function loadLeaderboard(category) {
+  loadingLeaderboard.value = true
+  
+  try {
+    const [diff, numQ] = category.split('-')
+    
+    const q = query(
+      collection(db, 'leaderboard'),
+      where('difficulty', '==', diff),
+      where('numQuestions', '==', parseInt(numQ)),
+      orderBy('totalScore', 'desc'),
+      limit(100)
+    )
+    
+    const querySnapshot = await getDocs(q)
+    const players = []
+    
+    querySnapshot.forEach((doc) => {
+      players.push({
+        id: doc.id,
+        ...doc.data()
+      })
+    })
+    
+    topPlayers.value = players
+    console.log('Loaded leaderboard:', players.length, 'entries')
+  } catch (error) {
+    console.error('Error loading leaderboard:', error)
+  } finally {
+    loadingLeaderboard.value = false
+  }
+}
+
+
+async function saveScoreToLeaderboard() {
+  savingScore.value = true
+  
+  try {
+    const scoreData = {
+      playerName: playerName.value.trim(),
+      difficulty: difficulty.value,
+      numQuestions: numQuestions.value,
+      totalScore: score.value,
+      accuracy: accuracy.value,
+      correctAnswers: correctAnswers.value,
+      totalTime: totalGameTime.value,
+      bestStreak: bestStreak.value,
+      timestamp: Date.now()
+    }
+    
+    await addDoc(collection(db, 'leaderboard'), scoreData)
+    
+    console.log('Score saved to leaderboard:', scoreData)
+    scoreSaved.value = true
+    
+    // Reload leaderboard to get updated position
+    await loadLeaderboard(`${difficulty.value}-${numQuestions.value}`)
+    
+    // Find player's position
+    const position = topPlayers.value.findIndex(p => 
+      p.playerName === playerName.value && 
+      Math.abs(p.timestamp - scoreData.timestamp) < 5000
+    )
+    
+    if (position !== -1) {
+      leaderboardPosition.value = position + 1
+    }
+  } catch (error) {
+    console.error('Error saving score:', error)
+  } finally {
+    savingScore.value = false
+  }
+}
+
+
+// ===== WATCHERS =====
+watch(leaderboardTab, (newTab) => {
+  loadLeaderboard(newTab)
+})
+
+
+// ===== LIFECYCLE =====
 onMounted(() => {
   console.log('Game page mounted')
   console.log('Species data loaded:', speciesData.length, 'species')
+  
+  // Load default leaderboard
+  loadLeaderboard(leaderboardTab.value)
 })
+
+
 </script>
+
+
+
 
 <style scoped lang="scss">
 // DESIGN SYSTEM
@@ -838,6 +1265,7 @@ $gradient-error: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
 // PLAYING SCREEN
 .playing-screen {
   padding: 2rem 0;
+  min-height: 100vh;
 }
 
 .progress-header {
@@ -885,10 +1313,10 @@ $gradient-error: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
 .species-image {
   width: 100%;
   height: auto;
-  max-height: 500px;  // Added max-height for better control
-  object-fit: contain;  // Changed from 'cover' to 'contain'
+  max-height: 500px;
+  object-fit: contain;
   display: block;
-  background: #f5f7fa;  // Added background color for letterboxing
+  background: #f5f7fa;
 }
 
 .image-label {
@@ -1268,52 +1696,6 @@ $gradient-error: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
   margin-top: 0.75rem;
 }
 
-// MISTAKES
-.mistakes-section {
-  background: white;
-  border-radius: 16px;
-  padding: 2rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  text-align: left;
-}
-
-.mistakes-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin: 0 0 1.5rem 0;
-}
-
-.mistakes-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.mistake-item {
-  display: flex;
-  gap: 1rem;
-  padding: 1rem;
-  background: #fff5f5;
-  border-radius: 10px;
-}
-
-.mistake-info {
-  flex: 1;
-}
-
-.mistake-text {
-  font-size: 0.9375rem;
-  color: #333;
-  margin-bottom: 0.25rem;
-}
-
-.mistake-correct {
-  font-size: 0.875rem;
-  color: #4CAF50;
-}
-
 // ACTIONS
 .results-actions {
   display: flex;
@@ -1338,4 +1720,351 @@ $gradient-error: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
     }
   }
 }
+
+// TIMER AND LEADERBOARD STYLES
+.timer-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  padding: 0.5rem 1rem;
+  background: white;
+  border-radius: 8px;
+  border: 2px solid #e0e0e0;
+  transition: all 0.3s;
+  
+  &.timer-warning {
+    border-color: #f44336;
+    background: #ffebee;
+    color: #d32f2f;
+    animation: pulse 0.5s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes pulse {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.05);
+  }
+}
+
+.timer-ring {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  background: white;
+  border-radius: 50%;
+  padding: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.timer-text {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.player-name-input {
+  :deep(.q-field__control) {
+    height: 56px;
+  }
+}
+
+.points-earned {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #4CAF50;
+  margin-top: 1rem;
+}
+
+.time-bonus-badge {
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+}
+
+.score-breakdown {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.breakdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  color: #666;
+}
+
+.leaderboard-preview {
+  background: white;
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  margin-top: 3rem;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.leaderboard-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 1.5rem;
+}
+
+.leaderboard-tabs {
+  margin-bottom: 1.5rem;
+}
+
+.leaderboard-content {
+  min-height: 200px;
+}
+
+.loading-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem 1rem;
+  color: #999;
+}
+
+.leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.leaderboard-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-radius: 12px;
+  transition: all 0.3s;
+  
+  &:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.rank {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.125rem;
+  flex-shrink: 0;
+  
+  &.rank-1 {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  }
+  
+  &.rank-2 {
+    background: linear-gradient(135deg, #C0C0C0 0%, #808080 100%);
+  }
+  
+  &.rank-3 {
+    background: linear-gradient(135deg, #CD7F32 0%, #8B4513 100%);
+  }
+}
+
+.player-info {
+  flex: 1;
+}
+
+.player-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.player-stats {
+  font-size: 0.875rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+.player-score {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #667eea;
+}
+
+.leaderboard-position-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  
+  h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 1rem 0 0.5rem 0;
+  }
+  
+  p {
+    opacity: 0.9;
+    font-size: 1rem;
+    margin: 0;
+  }
+}
+
+.save-score-card {
+  background: #f5f7fa;
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  
+  p {
+    margin-top: 1rem;
+    color: #666;
+  }
+}
+
+// FULL LEADERBOARD SCREEN
+.leaderboard-screen {
+  min-height: 100vh;
+  padding: 2rem 0;
+}
+
+.leaderboard-full {
+  background: white;
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.leaderboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.leaderboard-title-main {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.close-btn {
+  color: #666;
+}
+
+.leaderboard-tabs-full {
+  margin-bottom: 2rem;
+}
+
+.leaderboard-content-full {
+  min-height: 400px;
+}
+
+.leaderboard-table {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 60px 1fr auto 100px;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-radius: 12px;
+  border: 2px solid transparent;
+  transition: all 0.3s;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+  
+  &.highlighted {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #e8eaf6 0%, #f3e5f5 100%);
+  }
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 50px 1fr 80px;
+    
+    .stats-cell {
+      display: none;
+    }
+  }
+}
+
+.rank-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rank-number {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #666;
+}
+
+.player-cell {
+  flex: 1;
+}
+
+.player-name-full {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.player-date {
+  font-size: 0.875rem;
+  color: #999;
+  margin-top: 0.25rem;
+}
+
+.stats-cell {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.score-cell {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #667eea;
+  text-align: right;
+}
 </style>
+

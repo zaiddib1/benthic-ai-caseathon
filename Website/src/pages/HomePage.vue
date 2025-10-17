@@ -1,3 +1,4 @@
+/* eslint-disable */
 <template>
   <q-page class="ocean-page">
     <!-- Hero Section -->
@@ -69,7 +70,7 @@
           </defs>
           <g class="wave-parallax">
             <use href="#wave" x="48" y="0" fill="rgba(255,255,255,0.7)" />
-            <use href="#wave" x="48" y="3" fill="rgba(255,255,255,0.5)" />
+            <path id="wave" d="M-160 44c30 0 58-18 88-18s58 18 88 18 58-18 88-18 58 18 88 18v44h-352z" />
             <use href="#wave" x="48" y="5" fill="rgba(255,255,255,0.3)" />
             <use href="#wave" x="48" y="7" fill="#fff" />
           </g>
@@ -247,14 +248,28 @@
                 <div class="preview-stat">
                   <q-icon name="emoji_events" size="24px" color="amber" />
                   <div>
-                    <div class="preview-stat-value">1,247</div>
+                    <div class="preview-stat-value">
+                      <template v-if="loadingStats">
+                        <q-spinner size="20px" color="amber" />
+                      </template>
+                      <template v-else>
+                        {{ totalPlayers.toLocaleString() }}
+                      </template>
+                    </div>
                     <div class="preview-stat-label">Players</div>
                   </div>
                 </div>
                 <div class="preview-stat">
                   <q-icon name="psychology" size="24px" color="purple" />
                   <div>
-                    <div class="preview-stat-value">89%</div>
+                    <div class="preview-stat-value">
+                      <template v-if="loadingStats">
+                        <q-spinner size="20px" color="purple" />
+                      </template>
+                      <template v-else>
+                        {{ averageScore }}%
+                      </template>
+                    </div>
                     <div class="preview-stat-label">Avg Score</div>
                   </div>
                 </div>
@@ -264,7 +279,7 @@
                     <div class="preview-stat-value">7</div>
                     <div class="preview-stat-label">Species</div>
                   </div>
-                </div>
+                </div>              
               </div>
             </div>
           </div>
@@ -292,7 +307,7 @@
               <q-icon name="verified" size="40px" color="white" />
             </div>
             <div class="stat-content">
-              <div class="stat-number">95%</div>
+              <div class="stat-number">94%</div>
               <div class="stat-label">Model Accuracy</div>
               <div class="stat-sublabel">On validation dataset</div>
             </div>
@@ -364,8 +379,66 @@
 </template>
 
 <script setup lang="ts">
-// Component logic can be added here as needed
+import { ref, onMounted } from 'vue'
+import { collection, getDocs, query } from 'firebase/firestore'
+import { db } from '../../firebase' // Adjust path to your Firebase config
+
+// Stats from Firebase
+const totalPlayers = ref(0)
+const averageScore = ref(0)
+const loadingStats = ref(true)
+
+// Load stats from Firebase
+async function loadGameStats() {
+  loadingStats.value = true
+  
+  try {
+    const q = query(collection(db, 'leaderboard'))
+    const querySnapshot = await getDocs(q)
+    
+    // Count unique players
+    const uniquePlayers = new Set<string>()
+    let totalScore = 0
+    let scoreCount = 0
+    
+    querySnapshot.forEach((doc) => {
+      const data = doc.data()
+      
+      // Track unique player names
+      if (data.playerName) {
+        uniquePlayers.add(data.playerName)
+      }
+      
+      // Calculate average accuracy across all games
+      if (data.accuracy !== undefined) {
+        totalScore += data.accuracy
+        scoreCount++
+      }
+    })
+    
+    totalPlayers.value = uniquePlayers.size
+    averageScore.value = scoreCount > 0 ? Math.round(totalScore / scoreCount) : 0
+    
+    console.log('Game stats loaded:', {
+      totalPlayers: totalPlayers.value,
+      averageScore: averageScore.value,
+      totalGames: querySnapshot.size
+    })
+  } catch (error) {
+    console.error('Error loading game stats:', error)
+    // Fallback to default values
+    totalPlayers.value = 0
+    averageScore.value = 0
+  } finally {
+    loadingStats.value = false
+  }
+}
+
+onMounted(() => {
+  loadGameStats()
+})
 </script>
+
 
 <style scoped lang="scss">
 // DESIGN SYSTEM

@@ -32,7 +32,7 @@
           </div>
           <div class="stat-divider"></div>
           <div class="stat-item">
-            <div class="stat-value">15K+</div>
+            <div class="stat-value">10K+</div>
             <div class="stat-label">Training Images</div>
           </div>
         </div>
@@ -347,8 +347,8 @@
                       <q-icon name="verified" size="28px" color="green" />
                     </div>
                     <div class="metric-content">
-                      <div class="metric-value">92.4%</div>
-                      <div class="metric-label">mAP Score</div>
+                      <div class="metric-value">80%</div>
+                      <div class="metric-label">Avg Accuracy</div>
                     </div>
                   </div>
                   <div class="metric-card">
@@ -356,7 +356,7 @@
                       <q-icon name="photo_library" size="28px" color="blue" />
                     </div>
                     <div class="metric-content">
-                      <div class="metric-value">15.2K</div>
+                      <div class="metric-value">1.5K</div>
                       <div class="metric-label">Training Set</div>
                     </div>
                   </div>

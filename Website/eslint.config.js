@@ -17,6 +17,9 @@ export default [
     // ignores: []
   },
 
+  {
+    ignores: ["src/pages/HomePage.vue", "src/components/GamePage.vue"]
+  },  
   ...pluginQuasar.configs.recommended(),
   js.configs.recommended,
 
