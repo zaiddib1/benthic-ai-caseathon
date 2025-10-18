@@ -105,9 +105,9 @@
                   <div class="model-content">
                     <h3>Training & Deployment</h3>
                     <p>
-                      Both models were trained using PyTorch and Ultralytics frameworks on a dataset of over 10,000 
-                      annotated underwater images. The models are hosted on Hugging Face Spaces with a Gradio interface, 
-                      while the web frontend is built with Vue.js and Quasar, deployed on Vercel.
+                      Both models were trained using PyTorch (CNN) and Ultralytics (YOLO) frameworks on a dataset of over 10,000 
+                      annotated underwater images. The models are hosted on Hugging Face, using Torch Lightning APIs,
+                      while the web frontend is built with Vue.js and Quasar, deployed on Cloudflare.
                     </p>
                   </div>
                 </div>
