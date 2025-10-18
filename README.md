@@ -31,13 +31,13 @@
 
 ## 🧭 About The Project
 
-BenthicAI is an interactive Quasar web application that embeds Gradio interfaces for two state-of-the-art computer vision models designed for marine conservation and education:
+DeepFin is an interactive Quasar web application that embeds Gradio interfaces for two state-of-the-art computer vision models designed for marine conservation and education:
 
 - 🐠 **ConvNeXt Tiny (Classification)** – Classifies single-organism underwater images into seven benthic species: *Eel, Scallop, Crab, Flatfish, Roundfish, Skate, and Whelk.*
 - 🦀 **YOLOv8 (Object Detection)** – Detects and localizes multiple benthic organisms in seafloor scenes.
 
 ### Purpose
-BenthicAI supports:
+DeepFin supports:
 - **Marine Conservation** – Enables rapid, scalable underwater image analysis.
 - **Biodiversity Monitoring** – Assists researchers in long-term ecosystem tracking.
 - **STEM Education** – Demonstrates how AI aids marine science and outreach.
