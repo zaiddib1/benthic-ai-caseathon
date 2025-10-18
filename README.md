@@ -9,7 +9,7 @@
     <img src="icons/waves.svg" alt="Logo" width="100" height="100">
   </a>
 
-  <h3 align="center">BenthicAI</h2>
+  <h3 align="center">DeepFin</h2>
 
   <p align="center">
     AI-Powered Image Classification and Object Detection for Underwater Marine Life
