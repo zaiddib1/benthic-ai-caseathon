@@ -161,6 +161,18 @@
                 </div>
               </div>
             </div>
+            
+            <!-- NEW: View Full Leaderboard Button -->
+            <q-btn
+              v-if="topPlayers.length > 0"
+              outline
+              color="primary"
+              size="md"
+              label="View Full Leaderboard"
+              icon="open_in_new"
+              @click="gameState = 'leaderboard'"
+              class="view-full-leaderboard-btn"
+            />
           </div>
         </div>
       </div>
